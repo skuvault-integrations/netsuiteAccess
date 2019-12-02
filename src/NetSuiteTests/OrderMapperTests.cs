@@ -58,8 +58,8 @@ namespace NetSuiteTests
 			var result = order.ToSvOrder();
 			result.Should().NotBeNull();
 			result.Id.Should().Be( order.Id );
-			result.CreatedDate.Should().Be( order.CreatedDate.FromRFC3339ToUtc() );
-			result.ModifiedDate.Should().Be( order.LastModifiedDate.FromRFC3339ToUtc() );
+			result.CreatedDateUtc.Should().Be( order.CreatedDate.FromRFC3339ToUtc() );
+			result.ModifiedDateUtc.Should().Be( order.LastModifiedDate.FromRFC3339ToUtc() );
 			result.Status.Should().Be( order.Status );
 			
 			result.ShippingInfo.Should().NotBeNull();
