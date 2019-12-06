@@ -20,18 +20,33 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
-		public void GetModifiedOrders()
+		public void GetModifiedSalesOrders()
 		{
-			var orders = this._ordersService.GetOrdersAsync( DateTime.UtcNow.AddMonths( -1 ), DateTime.UtcNow, CancellationToken.None ).Result;
-			orders.Count().Should().BeGreaterThan( 0 );
+			var salesOrders = this._ordersService.GetSalesOrdersAsync( DateTime.UtcNow.AddMonths( -1 ), DateTime.UtcNow, CancellationToken.None ).Result;
+			salesOrders.Count().Should().BeGreaterThan( 0 );
 		}
 
 		[ Test ]
-		public void GetModifiedOrdersByPage()
+		public void GetModifiedSalesOrdersByPage()
 		{
 			Config.OrdersPageSize = 1;
-			var orders = this._ordersService.GetOrdersAsync( DateTime.UtcNow.AddMonths( -1 ), DateTime.UtcNow, CancellationToken.None ).Result;
-			orders.Count().Should().BeGreaterThan( 0 );
+			var salesOrders = this._ordersService.GetSalesOrdersAsync( DateTime.UtcNow.AddMonths( -1 ), DateTime.UtcNow, CancellationToken.None ).Result;
+			salesOrders.Count().Should().BeGreaterThan( 0 );
+		}
+
+		[ Test ]
+		public void GetModifiedPurchaseOrders()
+		{
+			var purchaseOrders = this._ordersService.GetPurchaseOrdersAsync( DateTime.UtcNow.AddMonths( -1 ), DateTime.UtcNow, CancellationToken.None ).Result;
+			purchaseOrders.Count().Should().BeGreaterThan( 0 );
+		}
+
+		[ Test ]
+		public void GetModifiedPurchaseOrdersByPage()
+		{
+			Config.OrdersPageSize = 1;
+			var purchaseOrders = this._ordersService.GetPurchaseOrdersAsync( DateTime.UtcNow.AddMonths( -1 ), DateTime.UtcNow, CancellationToken.None ).Result;
+			purchaseOrders.Count().Should().BeGreaterThan( 0 );
 		}
 	}
 }
