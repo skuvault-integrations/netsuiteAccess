@@ -78,6 +78,7 @@ namespace NetSuiteAccess.Services
 
 			var responseContent = await this.ThrottleRequestAsync( command, mark, async ( token ) =>
 			{
+				this.InitSecurityProtocol();
 				this.SetOAuthHeader( command );
 				var httpResponse = await HttpClient.GetAsync( command.Url ).ConfigureAwait( false );
 				var content = await httpResponse.Content.ReadAsStringAsync().ConfigureAwait( false );
@@ -155,6 +156,11 @@ namespace NetSuiteAccess.Services
 					() => CreateMethodCallInfo( command.Url, mark, additionalInfo: this.AdditionalLogInfo() ),
 					NetSuiteLogger.LogTraceException );
 			} );
+		}
+
+		private void InitSecurityProtocol()
+		{
+			ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3;
 		}
 
 		private string CreateMethodCallInfo( string url = "", Mark mark = null, string errors = "", string methodResult = "", string additionalInfo = "", string payload = "", [ CallerMemberName ] string memberName = "" )
