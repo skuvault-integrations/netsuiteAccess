@@ -5,12 +5,12 @@ using System.Globalization;
 
 namespace NetSuiteAccess.Models.Commands
 {
-	public sealed class GetModifiedSalesOrdersCommand : NetSuiteCommand
+	public class GetModifiedPurchaseOrdersCommand : NetSuiteCommand
 	{
 		public DateTime StartDate { get; private set; }
 		public DateTime EndDate { get; private set; }
 
-		public GetModifiedSalesOrdersCommand( NetSuiteConfig config, DateTime startDate, DateTime endDate ) : base( config, "/rest/platform/v1/record/salesorder" )
+		public GetModifiedPurchaseOrdersCommand( NetSuiteConfig config, DateTime startDate, DateTime endDate ) : base( config, "/rest/platform/v1/record/purchaseorder" )
 		{
 			Condition.Requires( startDate, "startDate" ).IsLessThan( endDate );
 

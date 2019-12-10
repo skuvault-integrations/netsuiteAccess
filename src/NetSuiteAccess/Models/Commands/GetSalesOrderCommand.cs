@@ -3,11 +3,11 @@ using NetSuiteAccess.Configuration;
 
 namespace NetSuiteAccess.Models.Commands
 {
-	public class GetOrderCommand : NetSuiteCommand
+	public class GetSalesOrderCommand : NetSuiteCommand
 	{
 		public long OrderId { get; private set; }
 
-		public GetOrderCommand( NetSuiteConfig config, long orderId ) : base( config, "/rest/platform/v1/record/salesorder" )
+		public GetSalesOrderCommand( NetSuiteConfig config, long orderId ) : base( config, "/rest/platform/v1/record/salesorder" )
 		{
 			Condition.Requires( orderId, "orderId" ).IsGreaterThan( 0 );
 
