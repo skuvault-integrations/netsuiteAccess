@@ -15,6 +15,7 @@ namespace NetSuiteAccess.Models
 
 	public class NetSuiteSalesOrder : NetSuiteOrder
 	{
+		public NetSuiteCustomer Customer { get; set; }
 		public NetSuiteSalesOrderItem[] Items { get; set; }
 	}
 
@@ -56,11 +57,6 @@ namespace NetSuiteAccess.Models
 					CountryCode = order.ShippingAddress.Country,
 					State = order.ShippingAddress.State
 				};
-				svOrder.ShippingInfo.ContactInfo = new NetSuiteShippingContactInfo()
-				{
-					Name = order.ShippingAddress.Addressee,
-					Email = order.Email
-				};
 			}
 
 			if ( order.ShipMethod != null )
@@ -85,6 +81,14 @@ namespace NetSuiteAccess.Models
 				}
 			}
 			svOrder.Items = items.ToArray();
+
+			if ( order.Entity != null )
+			{
+				svOrder.Customer = new NetSuiteCustomer()
+				{
+					Id = order.Entity.Id
+				};
+			}
 
 			return svOrder;
 		}

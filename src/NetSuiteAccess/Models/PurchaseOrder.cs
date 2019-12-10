@@ -48,11 +48,6 @@ namespace NetSuiteAccess.Models
 					CountryCode = order.ShippingAddress.Country,
 					State = order.ShippingAddress.State
 				};
-				svPurchaseOrder.ShippingInfo.ContactInfo = new NetSuiteShippingContactInfo()
-				{
-					Name = order.ShippingAddress.Addressee,
-					Email = order.Email
-				};
 			}
 
 			var items = new List< NetSuitePurchaseOrderItem >();

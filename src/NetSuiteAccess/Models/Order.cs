@@ -18,10 +18,10 @@ namespace NetSuiteAccess.Models
 		public ShippingAddress ShippingAddress { get; set; }
 		[ JsonProperty( "shipDate" ) ]
 		public DateTime ShipDate { get; set; }
-		[ JsonProperty( "email" ) ]
-		public string Email { get; set; }
 		[ JsonProperty( "item" ) ]
 		public ItemsMetaInfo ItemsInfo { get; set; }
+		[ JsonProperty( "entity" ) ]
+		public RecordMetaInfo Entity { get; set; }
 	}
 
 	public abstract class NetSuiteOrder
@@ -37,7 +37,6 @@ namespace NetSuiteAccess.Models
 
 	public class NetSuiteShippingInfo
 	{
-		public NetSuiteShippingContactInfo ContactInfo { get; set; }
 		public NetSuiteShippingAddress Address { get; set; }
 		public string Carrier { get; set; }
 		public decimal Cost { get; set; }
@@ -51,11 +50,5 @@ namespace NetSuiteAccess.Models
 		public string PostalCode { get; set; }
 		public string City { get; set; }
 		public string Line1 { get; set; }
-	}
-
-	public class NetSuiteShippingContactInfo
-	{
-		public string Name { get; set; }
-		public string Email { get; set; }
 	}
 }

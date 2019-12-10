@@ -54,6 +54,10 @@ namespace NetSuiteTests
 							Rate = 15
 						}
 					}
+				},
+				Entity = new RecordMetaInfo()
+				{
+					Id = 1680
 				}
 			};
 
@@ -63,14 +67,14 @@ namespace NetSuiteTests
 			result.CreatedDateUtc.Should().Be( order.CreatedDate.FromRFC3339ToUtc() );
 			result.ModifiedDateUtc.Should().Be( order.LastModifiedDate.FromRFC3339ToUtc() );
 			result.Status.Should().Be( order.Status );
+
+			result.Customer.Should().NotBeNull();
+			result.Customer.Id.Should().Be( order.Entity.Id );
 			
 			result.ShippingInfo.Should().NotBeNull();
 			result.ShippingInfo.Carrier.Should().Be( order.ShipMethod.RefName );
 			result.ShippingInfo.Cost.Should().Be( order.ShippingCost );
 			
-			result.ShippingInfo.ContactInfo.Should().NotBeNull();
-			result.ShippingInfo.ContactInfo.Name.Should().Be( order.ShippingAddress.Addressee );
-
 			result.ShippingInfo.Address.Should().NotBeNull();
 			result.ShippingInfo.Address.Line1.Should().Be( order.ShippingAddress.Addr1 );
 			result.ShippingInfo.Address.CountryCode.Should().Be( order.ShippingAddress.Country );
@@ -131,9 +135,6 @@ namespace NetSuiteTests
 			result.ModifiedDateUtc.Should().Be( order.LastModifiedDate.FromRFC3339ToUtc() );
 			result.Status.Should().Be( order.Status );
 			
-			result.ShippingInfo.ContactInfo.Should().NotBeNull();
-			result.ShippingInfo.ContactInfo.Name.Should().Be( order.ShippingAddress.Addressee );
-
 			result.ShippingInfo.Address.Should().NotBeNull();
 			result.ShippingInfo.Address.Line1.Should().Be( order.ShippingAddress.Addr1 );
 			result.ShippingInfo.Address.CountryCode.Should().Be( order.ShippingAddress.Country );
