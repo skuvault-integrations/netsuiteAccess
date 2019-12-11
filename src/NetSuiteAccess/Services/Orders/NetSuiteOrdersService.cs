@@ -5,13 +5,17 @@ using System.Threading.Tasks;
 using NetSuiteAccess.Configuration;
 using NetSuiteAccess.Models;
 using NetSuiteAccess.Models.Commands;
+using NetSuiteAccess.Services.Customers;
 
 namespace NetSuiteAccess.Services.Orders
 {
 	public sealed class NetSuiteOrdersService : BaseService, INetSuiteOrdersService
 	{
+		private INetSuiteCustomersService _customersService;
+
 		public NetSuiteOrdersService( NetSuiteConfig config ) : base( config )
 		{
+			this._customersService = new NetSuiteCustomersService( config );
 		}
 
 		public async Task< IEnumerable< NetSuitePurchaseOrder > > GetPurchaseOrdersAsync( DateTime startDateUtc, DateTime endDateUtc, CancellationToken token )
@@ -38,10 +42,26 @@ namespace NetSuiteAccess.Services.Orders
 			foreach( var orderId in ordersIds )
 			{
 				var order = await base.GetAsync< SalesOrder >( new GetSalesOrderCommand( this.Config, orderId ), token ).ConfigureAwait( false );
-				orders.Add( order.ToSVSalesOrder() );
+				var svOrder = order.ToSVSalesOrder();
+				await FillCustomerData( svOrder, token ).ConfigureAwait( false );
+
+				orders.Add( svOrder );
 			}
 
 			return orders.ToArray();
+		}
+
+		private async Task FillCustomerData( NetSuiteSalesOrder order, CancellationToken token )
+		{
+			if ( order.Customer != null )
+			{
+				var customerInfo = await this._customersService.GetCustomerInfoByIdAsync( order.Customer.Id, token ).ConfigureAwait( false );
+
+				if ( customerInfo != null )
+				{
+					order.Customer = customerInfo;
+				}
+			}
 		}
 	}
 }
