@@ -50,14 +50,17 @@ namespace NetSuiteAccess.Models
 				};
 			}
 
+			if ( order.Entity != null )
+			{
+				svPurchaseOrder.SupplierName = order.Entity.RefName;
+			}
+
 			var items = new List< NetSuitePurchaseOrderItem >();
 
 			if ( order.ItemsInfo != null )
 			{
 				foreach( var itemInfo in order.ItemsInfo.Items )
 				{
-					svPurchaseOrder.SupplierName = itemInfo.VendorName;
-
 					items.Add( new NetSuitePurchaseOrderItem()
 					{
 						Quantity = (int)Math.Floor( itemInfo.Quantity ),
