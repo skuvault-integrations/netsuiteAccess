@@ -1,5 +1,4 @@
 ﻿using FluentAssertions;
-using NetSuiteAccess.Exceptions;
 using NetSuiteAccess.Services.Items;
 using NUnit.Framework;
 using System;
@@ -14,7 +13,7 @@ namespace NetSuiteTests
 	{
 		private INetSuiteItemsService _itemsService;
 		private const string warehouse = "SkuVault";
-		private const string accountId = "54";
+		private const int accountId = 54;
 
 		[ SetUp ]
 		public void Init()

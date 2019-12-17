@@ -69,6 +69,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BaseTest.cs" />
+    <Compile Include="CommonTests.cs" />
     <Compile Include="CustomerTests.cs" />
     <Compile Include="ItemTests.cs" />
     <Compile Include="OrderMapperTests.cs" />

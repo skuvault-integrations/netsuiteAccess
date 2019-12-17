@@ -51,7 +51,7 @@ namespace NetSuiteAccess.Services.Items
 		/// <param name="quantity">Quantity</param>
 		/// <param name="token">Cancellation token</param>
 		/// <returns></returns>
-		public async System.Threading.Tasks.Task UpdateItemQuantityBySkuAsync( string accountInternalId, string warehouseName, string sku, int quantity, CancellationToken token )
+		public async System.Threading.Tasks.Task UpdateItemQuantityBySkuAsync( int accountId, string warehouseName, string sku, int quantity, CancellationToken token )
 		{
 			if ( string.IsNullOrWhiteSpace( sku ) || string.IsNullOrWhiteSpace( warehouseName ) )
 				return;
@@ -61,7 +61,7 @@ namespace NetSuiteAccess.Services.Items
 				{ sku, quantity }
 			};
 
-			await this.UpdateSkusQuantitiesAsync( accountInternalId, warehouseName, inventoryAdjustment, token ).ConfigureAwait( false );
+			await this.UpdateSkusQuantitiesAsync( accountId, warehouseName, inventoryAdjustment, token ).ConfigureAwait( false );
 		}
 
 		/// <summary>
@@ -72,7 +72,7 @@ namespace NetSuiteAccess.Services.Items
 		/// <param name="skuQuantities">Sku (item display name)</param>
 		/// <param name="token">Cancellation token</param>
 		/// <returns></returns>
-		public async System.Threading.Tasks.Task UpdateSkusQuantitiesAsync( string accountInternalId, string warehouseName, Dictionary< string, int > skuQuantities, CancellationToken token )
+		public async System.Threading.Tasks.Task UpdateSkusQuantitiesAsync( int accountId, string warehouseName, Dictionary< string, int > skuQuantities, CancellationToken token )
 		{
 			if ( string.IsNullOrWhiteSpace( warehouseName ) )
 				return;
@@ -116,7 +116,7 @@ namespace NetSuiteAccess.Services.Items
 
 			if ( inventoryAdjustment.Count > 0 )
 			{
-				await this._service.AdjustInventory( accountInternalId, inventoryAdjustment.ToArray(), token ).ConfigureAwait( false );
+				await this._service.AdjustInventory( accountId, inventoryAdjustment.ToArray(), token ).ConfigureAwait( false );
 			}
 		}
 

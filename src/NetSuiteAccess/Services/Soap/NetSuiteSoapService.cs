@@ -2,10 +2,12 @@
 using Netco.Extensions;
 using NetSuiteAccess.Configuration;
 using NetSuiteAccess.Exceptions;
+using NetSuiteAccess.Models;
 using NetSuiteAccess.Shared;
 using NetSuiteAccess.Throttling;
 using NetSuiteSoapWS;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
@@ -138,7 +140,7 @@ namespace NetSuiteAccess.Services.Soap
 			return null;
 		}
 
-		public async System.Threading.Tasks.Task AdjustInventory( string accountInternalId, InventoryAdjustmentInventory[] inventory, CancellationToken cancellationToken )
+		public async System.Threading.Tasks.Task AdjustInventory( int accountId, InventoryAdjustmentInventory[] inventory, CancellationToken cancellationToken )
 		{
 			var mark = Mark.CreateNew();
 
@@ -152,7 +154,7 @@ namespace NetSuiteAccess.Services.Soap
 			{
 				 account = new RecordRef()
 				 {
-					 internalId = accountInternalId
+					 internalId = accountId.ToString()
 				 },
 				 inventoryList = new InventoryAdjustmentInventoryList()
 				 {
@@ -169,6 +171,32 @@ namespace NetSuiteAccess.Services.Soap
 			{
 				throw new NetSuiteException( response.writeResponse.status.statusDetail[0].message );
 			}
+		}
+
+		public async Task< IEnumerable< NetSuiteAccount > > ListAccounts( CancellationToken cancellationToken )
+		{
+			var mark = Mark.CreateNew();
+
+			if ( cancellationToken.IsCancellationRequested )
+			{
+				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
+			}
+
+			var accountsSearch = new AccountSearch();
+			var response = await this.ThrottleRequestAsync( mark, ( token ) =>
+			{
+				return this._service.searchAsync( null, this._passport, null, null, null, accountsSearch );
+			}, accountsSearch.ToJson(), cancellationToken ).ConfigureAwait( false );
+
+			if ( response.searchResult.status.isSuccess )
+			{
+				return response.searchResult.recordList
+					.Select( r => r as Account )
+					.Select( r => new NetSuiteAccount() { Id = int.Parse( r.internalId ), Name = r.acctName, Number = r.acctNumber } ).ToArray();
+			}
+
+			return null;
 		}
 
 		private Task< T > ThrottleRequestAsync< T >( Mark mark, Func< CancellationToken, Task< T > > processor, string payload, CancellationToken token )
