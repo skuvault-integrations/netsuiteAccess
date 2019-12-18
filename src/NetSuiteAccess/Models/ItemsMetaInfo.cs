@@ -22,8 +22,6 @@ namespace NetSuiteAccess.Models
 		public decimal Rate { get; set; }
 		[ JsonProperty( "taxRate1" ) ]
 		public decimal TaxRate { get; set; }
-		[ JsonProperty( "vendorName" ) ]
-		public string VendorName { get; set; }
 		[ JsonProperty( "amount" ) ]
 		public decimal Cost { get; set; }
 	}

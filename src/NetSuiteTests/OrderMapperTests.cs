@@ -125,6 +125,11 @@ namespace NetSuiteTests
 							Rate = 5
 						}
 					}
+				},
+				Entity = new RecordMetaInfo()
+				{
+					Id = 1,
+					RefName = "Samsung"
 				}
 			};
 
@@ -141,6 +146,8 @@ namespace NetSuiteTests
 			result.ShippingInfo.Address.City.Should().Be( order.ShippingAddress.City );
 			result.ShippingInfo.Address.PostalCode.Should().Be( order.ShippingAddress.Zip );
 			result.ShipDate.Should().Be( order.ShipDate );
+
+			result.SupplierName.Should().Be( order.Entity.RefName );
 			
 			result.Items.Count().Should().Be( 1 );
 			result.Items[0].Quantity.Should().Be( (int)order.ItemsInfo.Items[0].Quantity );
