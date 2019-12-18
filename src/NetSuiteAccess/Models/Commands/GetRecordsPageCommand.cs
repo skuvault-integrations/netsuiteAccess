@@ -16,7 +16,7 @@ namespace NetSuiteAccess.Models.Commands
 			this.Limit = limit;
 			this.Offset = offset;
 
-			this.Url = string.Format( "{0}&limit={1}&offset={2}", command.Url, this.Limit, this.Offset );
+			this.Url = string.Format( "{0}{1}limit={2}&offset={3}", command.Url, command.Url.Contains( "?" ) ? "&" : "?", this.Limit, this.Offset );
 		}
 	}
 }

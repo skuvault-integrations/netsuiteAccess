@@ -12,6 +12,7 @@ namespace NetSuiteAccess.Configuration
 		public readonly NetworkOptions NetworkOptions;
 
 		public int OrdersPageSize { get; set; }
+		public int LocationsPageSize { get; set; }
 
 		public NetSuiteConfig( NetSuiteCredentials credentials, ThrottlingOptions throttlingOptions, NetworkOptions networkOptions )
 		{
@@ -24,6 +25,7 @@ namespace NetSuiteAccess.Configuration
 			this.NetworkOptions = networkOptions;
 			this.ApiBaseUrl = string.Format( "https://{0}.suitetalk.api.netsuite.com", credentials.CustomerId );
 			this.OrdersPageSize = 1000;
+			this.LocationsPageSize = 100;
 		}
 
 		public NetSuiteConfig( NetSuiteCredentials credentials ) : this( credentials, ThrottlingOptions.NetSuiteDefaultThrottlingOptions, NetworkOptions.NetSuiteDefaultNetworkOptions )
