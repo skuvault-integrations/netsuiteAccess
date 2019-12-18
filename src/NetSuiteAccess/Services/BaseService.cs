@@ -120,10 +120,9 @@ namespace NetSuiteAccess.Services
 			{
 				throw new NetSuiteRateLimitsExceeded( message );
 			}
-			else if ( responseStatusCode == HttpStatusCode.BadRequest
-					|| responseStatusCode == HttpStatusCode.InternalServerError )
+			else if ( responseStatusCode == HttpStatusCode.BadRequest )
 			{
-				throw new NetSuiteException( message );
+				throw new NetSuiteResourceAccessException( message );
 			}
 
 			throw new NetSuiteNetworkException( message );

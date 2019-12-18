@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NetSuiteAccess.Exceptions;
+using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -71,7 +72,7 @@ namespace NetSuiteAccess.Throttling
 				{
 					return await this.TryExecuteAsync( funcToThrottle ).ConfigureAwait( false );
 				}
-				catch( Exception )
+				catch( NetSuiteNetworkException )
 				{
 					if (retryCount >= this._maxRetryCount)
 						throw;
