@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
 using System.Xml;
 
@@ -84,6 +85,11 @@ namespace NetSuiteAccess.Shared
 		public static DateTime FromRFC3339ToUtc( this string rfc3339DateTime )
 		{
 			return XmlConvert.ToDateTime( rfc3339DateTime, XmlDateTimeSerializationMode.Utc );
+		}
+
+		public static void InitSecurityProtocol()
+		{
+			ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3;
 		}
 	}
 }

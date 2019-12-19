@@ -206,6 +206,8 @@ namespace NetSuiteAccess.Services.Soap
 				return new ActionPolicy( this._config.NetworkOptions.RetryAttempts, this._config.NetworkOptions.DelayBetweenFailedRequestsInSec, this._config.NetworkOptions.DelayFailRequestRate )
 					.ExecuteAsync( async () =>
 					{
+						Misc.InitSecurityProtocol();
+
 						using( var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource( token ) )
 						{
 							NetSuiteLogger.LogStarted( this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo(), payload: payload ) );
