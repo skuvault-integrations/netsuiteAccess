@@ -76,7 +76,7 @@ namespace NetSuiteAccess.Services.Soap
 			}
 		}
 
-		public async Task< InventoryItem > GetItemByIdAsync( string sku, CancellationToken cancellationToken )
+		public async Task< InventoryItem > GetItemBySkuAsync( string sku, CancellationToken cancellationToken )
 		{
 			var mark = Mark.CreateNew();
 
@@ -197,6 +197,103 @@ namespace NetSuiteAccess.Services.Soap
 			}
 
 			return null;
+		}
+
+		public async Task< Vendor > GetVendorByNameAsync( string vendorName, CancellationToken cancellationToken )
+		{
+			if ( string.IsNullOrWhiteSpace( vendorName ) )
+				return null;
+
+			var mark = Mark.CreateNew();
+
+			if ( cancellationToken.IsCancellationRequested )
+			{
+				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
+			}
+
+			var vendorSearch = new VendorSearch()
+			{
+				basic = new VendorSearchBasic()
+				{
+					entityId = new SearchStringField()
+					{
+						@operator = SearchStringFieldOperator.@is,
+						operatorSpecified = true,
+						searchValue = vendorName
+					}
+				}
+			};
+
+			var response = await this.ThrottleRequestAsync( mark, ( token ) =>
+			{
+				return this._service.searchAsync( null, this._passport, null, null, null, vendorSearch );
+			}, vendorSearch.ToJson(), cancellationToken ).ConfigureAwait( false );
+
+			if ( response.searchResult.status.isSuccess )
+			{
+				return response.searchResult.recordList
+					.Select( r => r as Vendor ).FirstOrDefault();
+			}
+
+			return null;
+		}
+
+		public async System.Threading.Tasks.Task CreatePurchaseOrder( NetSuitePurchaseOrder order, long locationId, CancellationToken cancellationToken )
+		{
+			var mark = Mark.CreateNew();
+
+			if ( cancellationToken.IsCancellationRequested )
+			{
+				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
+			}
+
+			var vendor = await this.GetVendorByNameAsync( order.SupplierName, cancellationToken ).ConfigureAwait( false );
+
+			if ( vendor == null )
+				return;
+
+			var purchaseOrderRecord = new NetSuiteSoapWS.PurchaseOrder()
+			{
+				tranId = order.DocNumber,
+				createdDate = order.CreatedDateUtc, 
+				location = new RecordRef()
+				{
+					internalId = locationId.ToString()
+				}, 
+				entity = new RecordRef()
+				{
+					internalId = vendor.internalId
+				},
+			};
+
+			var purchaseOrderRecordItems = new List< PurchaseOrderItem >();
+			foreach( var orderItem in order.Items )
+			{
+				var item = await this.GetItemBySkuAsync( orderItem.Sku, cancellationToken ).ConfigureAwait( false );
+
+				if ( item != null)
+				{
+					purchaseOrderRecordItems.Add( new PurchaseOrderItem()
+					{
+						item = new RecordRef() { internalId = item.internalId }, 
+						quantity = orderItem.Quantity,
+						quantitySpecified = true
+					} );
+				}
+			}
+			purchaseOrderRecord.itemList = new PurchaseOrderItemList() { item = purchaseOrderRecordItems.ToArray() };
+
+			var response = await this.ThrottleRequestAsync( mark, ( token ) =>
+			{
+				return this._service.addAsync( null, this._passport, null, null, null, purchaseOrderRecord );
+			}, order.ToJson(), cancellationToken ).ConfigureAwait( false );
+
+			if ( !response.writeResponse.status.isSuccess )
+			{
+				throw new NetSuiteException( response.writeResponse.status.statusDetail[0].message );
+			}
 		}
 
 		private Task< T > ThrottleRequestAsync< T >( Mark mark, Func< CancellationToken, Task< T > > processor, string payload, CancellationToken token )

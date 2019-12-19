@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NetSuiteAccess.Configuration;
 using NetSuiteAccess.Exceptions;
 using NetSuiteAccess.Models;
 using NetSuiteAccess.Models.Commands;
+using NetSuiteAccess.Services.Common;
 using NetSuiteAccess.Services.Customers;
+using NetSuiteAccess.Services.Soap;
 using NetSuiteAccess.Shared;
 
 namespace NetSuiteAccess.Services.Orders
@@ -14,10 +17,25 @@ namespace NetSuiteAccess.Services.Orders
 	public sealed class NetSuiteOrdersService : BaseService, INetSuiteOrdersService
 	{
 		private INetSuiteCustomersService _customersService;
+		private INetSuiteCommonService _commonService;
+		private NetSuiteSoapService _soapService;
 
 		public NetSuiteOrdersService( NetSuiteConfig config ) : base( config )
 		{
 			this._customersService = new NetSuiteCustomersService( config );
+			this._commonService = new NetSuiteCommonService( config );
+			this._soapService = new NetSuiteSoapService( config );
+		}
+
+		public async Task CreatePurchaseOrder( NetSuitePurchaseOrder order, string locationName, CancellationToken token )
+		{
+			var locations = await this._commonService.GetLocationsAsync( token ).ConfigureAwait( false );
+			var location = locations.Where( l => l.Name.ToLower().Equals( locationName.ToLower() ) ).FirstOrDefault();
+
+			if ( location == null )
+				throw new NetSuiteException( string.Format( "Location with name {0} is not found in NetSuite!", locationName ) );
+
+			await this._soapService.CreatePurchaseOrder( order, location.Id, token ).ConfigureAwait( false );
 		}
 
 		public async Task< IEnumerable< NetSuitePurchaseOrder > > GetPurchaseOrdersAsync( DateTime startDateUtc, DateTime endDateUtc, CancellationToken token )

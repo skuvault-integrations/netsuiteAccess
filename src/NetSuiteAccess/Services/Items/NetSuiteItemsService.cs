@@ -81,7 +81,7 @@ namespace NetSuiteAccess.Services.Items
 
 			foreach( var skuQuantity in skuQuantities )
 			{
-				var item = await this._service.GetItemByIdAsync( skuQuantity.Key, token ).ConfigureAwait( false );
+				var item = await this._service.GetItemBySkuAsync( skuQuantity.Key, token ).ConfigureAwait( false );
 
 				if ( item == null )
 					continue;
@@ -129,7 +129,7 @@ namespace NetSuiteAccess.Services.Items
 		/// <returns></returns>
 		public async Task< int > GetSkuQuantity( string sku, string warehouseName, CancellationToken token )
 		{
-			var item = await this._service.GetItemByIdAsync( sku, token ).ConfigureAwait( false );
+			var item = await this._service.GetItemBySkuAsync( sku, token ).ConfigureAwait( false );
 
 			if ( item == null )
 				throw new NetSuiteItemNotFoundException( sku );

@@ -8,7 +8,7 @@ namespace NetSuiteAccess.Models
 		[ JsonProperty( "id" ) ]
 		public long Id { get; set; }
 		[ JsonProperty( "tranId" ) ]
-		public long TranId { get; set; }
+		public string TranId { get; set; }
 		public string CreatedDate { get; set; }
 		[ JsonProperty( "lastModifiedDate" ) ]
 		public string LastModifiedDate { get; set; }
@@ -27,7 +27,7 @@ namespace NetSuiteAccess.Models
 	public abstract class NetSuiteOrder
 	{
 		public long Id { get; set; }
-		public long DocNumber { get; set; }
+		public string DocNumber { get; set; }
 		public DateTime CreatedDateUtc { get; set; }
 		public DateTime ModifiedDateUtc { get; set; }
 		public string Status { get; set; }
