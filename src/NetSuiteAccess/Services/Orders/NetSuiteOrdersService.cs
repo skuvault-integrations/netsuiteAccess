@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using NetSuiteAccess.Configuration;
+using NetSuiteAccess.Exceptions;
 using NetSuiteAccess.Models;
 using NetSuiteAccess.Models.Commands;
 using NetSuiteAccess.Services.Customers;
+using NetSuiteAccess.Shared;
 
 namespace NetSuiteAccess.Services.Orders
 {
@@ -26,8 +28,16 @@ namespace NetSuiteAccess.Services.Orders
 
 			foreach( var orderId in ordersIds )
 			{
-				var purchaseOrder = await base.GetAsync< PurchaseOrder >( new GetPurchaseOrderCommand( this.Config, orderId ), token ).ConfigureAwait( false );
-				purchaseOrders.Add( purchaseOrder.ToSVPurchaseOrder() );
+				try
+				{
+					var purchaseOrder = await base.GetAsync< PurchaseOrder >( new GetPurchaseOrderCommand( this.Config, orderId ), token ).ConfigureAwait( false );
+					purchaseOrders.Add( purchaseOrder.ToSVPurchaseOrder() );
+				}
+				catch( NetSuiteResourceAccessException ex )
+				{
+					// ignore order with issue, log and continue
+					NetSuiteLogger.LogTrace( ex, string.Format( "Skipped purchase order {0} with internal error", orderId ) );
+				}
 			}
 
 			return purchaseOrders.ToArray();
@@ -41,11 +51,18 @@ namespace NetSuiteAccess.Services.Orders
 
 			foreach( var orderId in ordersIds )
 			{
-				var order = await base.GetAsync< SalesOrder >( new GetSalesOrderCommand( this.Config, orderId ), token ).ConfigureAwait( false );
-				var svOrder = order.ToSVSalesOrder();
-				await FillCustomerData( svOrder, token ).ConfigureAwait( false );
-
-				orders.Add( svOrder );
+				try
+				{
+					var order = await base.GetAsync< SalesOrder >( new GetSalesOrderCommand( this.Config, orderId ), token ).ConfigureAwait( false );
+					var svOrder = order.ToSVSalesOrder();
+					await FillCustomerData( svOrder, token ).ConfigureAwait( false );
+					orders.Add( svOrder );
+				}
+				catch( NetSuiteResourceAccessException ex )
+				{
+					// ignore order with issue, log and continue
+					NetSuiteLogger.LogTrace( ex, string.Format( "Skipped sales order {0} with internal error", orderId ) );
+				}
 			}
 
 			return orders.ToArray();
