@@ -3,10 +3,7 @@ using NetSuiteAccess.Models;
 using NetSuiteAccess.Shared;
 using NUnit.Framework;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NetSuiteTests
 {
@@ -18,7 +15,7 @@ namespace NetSuiteTests
 		{
 			var order = new SalesOrder()
 			{
-				Id = 1,
+				Id = "1",
 				CreatedDate = "2019-11-29T10:00:00Z",
 				LastModifiedDate = "2019-11-29T10:00:00Z",
 				ShipMethod = new RecordMetaInfo()
@@ -94,7 +91,7 @@ namespace NetSuiteTests
 		{
 			var order = new PurchaseOrder()
 			{
-				Id = 1,
+				Id = "1",
 				CreatedDate = "2019-11-29T10:00:00Z",
 				LastModifiedDate = "2019-11-29T10:00:00Z",
 				Status = "Pending Receipt",

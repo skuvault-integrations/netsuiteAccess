@@ -43,7 +43,8 @@ namespace NetSuiteAccess.Services.Items
 		}
 
 		/// <summary>
-		///	Creates inventory adjustment document in NetSuite
+		///	Creates inventory adjustment document in NetSuite.
+		///	Requires Transactions -> Adjust Inventory role permission.
 		/// </summary>
 		/// <param name="accountInternalId">Account</param>
 		/// <param name="warehouseName">Warehouse name (location)</param>
@@ -65,7 +66,8 @@ namespace NetSuiteAccess.Services.Items
 		}
 
 		/// <summary>
-		///	Creates inventory adjustment document inside NetSuite
+		///	Creates inventory adjustment document inside NetSuite.
+		///	Requires Transactions -> Adjust Inventory role permission.
 		/// </summary>
 		/// <param name="accountInternalId">Account</param>
 		/// <param name="warehouseName">Warehouse name (location)</param>
@@ -116,12 +118,13 @@ namespace NetSuiteAccess.Services.Items
 
 			if ( inventoryAdjustment.Count > 0 )
 			{
-				await this._service.AdjustInventory( accountId, inventoryAdjustment.ToArray(), token ).ConfigureAwait( false );
+				await this._service.AdjustInventoryAsync( accountId, inventoryAdjustment.ToArray(), token ).ConfigureAwait( false );
 			}
 		}
 
 		/// <summary>
 		///	Find item by sku and get it's hand on quantity in specified warehouse
+		///	Requires Lists -> Items role permission.
 		/// </summary>
 		/// <param name="sku">Sku (item displayName)</param>
 		/// <param name="warehouseName">Warehouse (location)</param>

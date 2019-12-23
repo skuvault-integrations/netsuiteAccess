@@ -27,7 +27,15 @@ namespace NetSuiteAccess.Services.Orders
 			this._soapService = new NetSuiteSoapService( config );
 		}
 
-		public async Task CreatePurchaseOrder( NetSuitePurchaseOrder order, string locationName, CancellationToken token )
+		/// <summary>
+		///	Create purchase order.
+		///	Requires Transactions -> Purchase Order role permission. Level - Create or Full.
+		/// </summary>
+		/// <param name="order"></param>
+		/// <param name="locationName"></param>
+		/// <param name="token"></param>
+		/// <returns></returns>
+		public async Task CreatePurchaseOrderAsync( NetSuitePurchaseOrder order, string locationName, CancellationToken token )
 		{
 			var locations = await this._commonService.GetLocationsAsync( token ).ConfigureAwait( false );
 			var location = locations.Where( l => l.Name.ToLower().Equals( locationName.ToLower() ) ).FirstOrDefault();
@@ -35,9 +43,38 @@ namespace NetSuiteAccess.Services.Orders
 			if ( location == null )
 				throw new NetSuiteException( string.Format( "Location with name {0} is not found in NetSuite!", locationName ) );
 
-			await this._soapService.CreatePurchaseOrder( order, location.Id, token ).ConfigureAwait( false );
+			await this._soapService.CreatePurchaseOrderAsync( order, location.Id, token ).ConfigureAwait( false );
 		}
 
+		/// <summary>
+		///	Update purchase order.
+		///	Requires Transactions -> Purchase Order role permission. Level - Edit or Full.
+		/// </summary>
+		/// <param name="order"></param>
+		/// <param name="none"></param>
+		/// <returns></returns>
+		public Task UpdatePurchaseOrderAsync( NetSuitePurchaseOrder order, CancellationToken token )
+		{
+			return this._soapService.UpdatePurchaseOrderAsync( order, token );
+		}
+
+		/// <summary>
+		///	Get all purchase orders
+		/// </summary>
+		/// <param name="token"></param>
+		/// <returns></returns>
+		public Task< IEnumerable< NetSuitePurchaseOrder > > GetAllPurchaseOrdersAsync( CancellationToken token )
+		{
+			return this._soapService.GetAllPurchaseOrdersAsync( token );
+		}
+
+		/// <summary>
+		///	Lists purchase orders that were changed
+		/// </summary>
+		/// <param name="startDateUtc"></param>
+		/// <param name="endDateUtc"></param>
+		/// <param name="token"></param>
+		/// <returns></returns>
 		public async Task< IEnumerable< NetSuitePurchaseOrder > > GetPurchaseOrdersAsync( DateTime startDateUtc, DateTime endDateUtc, CancellationToken token )
 		{
 			var purchaseOrders = new List< NetSuitePurchaseOrder >();
@@ -61,6 +98,13 @@ namespace NetSuiteAccess.Services.Orders
 			return purchaseOrders.ToArray();
 		}
 
+		/// <summary>
+		///  Lists sales orders that were changed
+		/// </summary>
+		/// <param name="startDateUtc"></param>
+		/// <param name="endDateUtc"></param>
+		/// <param name="token"></param>
+		/// <returns></returns>
 		public async Task< IEnumerable< NetSuiteSalesOrder > > GetSalesOrdersAsync( DateTime startDateUtc, DateTime endDateUtc, CancellationToken token )
 		{
 			var orders = new List< NetSuiteSalesOrder >();

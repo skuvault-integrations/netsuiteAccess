@@ -1,5 +1,4 @@
 ﻿using CuttingEdge.Conditions;
-using Netco.Extensions;
 using NetSuiteAccess.Configuration;
 using NetSuiteAccess.Exceptions;
 using NetSuiteAccess.Models;
@@ -34,6 +33,10 @@ namespace NetSuiteAccess.Services.Soap
 		private NetSuiteConfig _config; 
 		private NetSuitePortTypeClient _service;
 
+		/// <summary>
+		///	Token-based authentication.
+		///	TBA option should be enabled in the application integration settings.
+		/// </summary>
 		private TokenPassport _passport
 		{
 			get
@@ -76,6 +79,13 @@ namespace NetSuiteAccess.Services.Soap
 			}
 		}
 
+		/// <summary>
+		///	Find inventory item in NetSuite by sku.
+		///	Requires Lists -> Items role permission.
+		/// </summary>
+		/// <param name="sku"></param>
+		/// <param name="cancellationToken"></param>
+		/// <returns></returns>
 		public async Task< InventoryItem > GetItemBySkuAsync( string sku, CancellationToken cancellationToken )
 		{
 			var mark = Mark.CreateNew();
@@ -108,10 +118,17 @@ namespace NetSuiteAccess.Services.Soap
 			{
 				return searchResponse.searchResult.recordList.FirstOrDefault() as InventoryItem;
 			}
-
-			return null;
+			
+			throw new NetSuiteException( searchResponse.searchResult.status.statusDetail[0].message );
 		}
 
+		/// <summary>
+		///	Get item inventory. It supports multi-location inventory feature.
+		///	Requires Lists -> Items role permission.
+		/// </summary>
+		/// <param name="item"></param>
+		/// <param name="cancellationToken"></param>
+		/// <returns></returns>
 		public async Task< ItemAvailability[] > GetItemInventoryAsync( InventoryItem item, CancellationToken cancellationToken )
 		{
 			var mark = Mark.CreateNew();
@@ -136,11 +153,19 @@ namespace NetSuiteAccess.Services.Soap
 			{
 				return response.getItemAvailabilityResult.itemAvailabilityList;
 			}
-
-			return null;
+			
+			throw new NetSuiteException( response.getItemAvailabilityResult.status.statusDetail[0].message );
 		}
 
-		public async System.Threading.Tasks.Task AdjustInventory( int accountId, InventoryAdjustmentInventory[] inventory, CancellationToken cancellationToken )
+		/// <summary>
+		///	Adjust items inventory. 
+		///	Requires Transactions -> Adjust Inventory role permission. Level - Edit.
+		/// </summary>
+		/// <param name="accountId"></param>
+		/// <param name="inventory"></param>
+		/// <param name="cancellationToken"></param>
+		/// <returns></returns>
+		public async System.Threading.Tasks.Task AdjustInventoryAsync( int accountId, InventoryAdjustmentInventory[] inventory, CancellationToken cancellationToken )
 		{
 			var mark = Mark.CreateNew();
 
@@ -173,7 +198,13 @@ namespace NetSuiteAccess.Services.Soap
 			}
 		}
 
-		public async Task< IEnumerable< NetSuiteAccount > > ListAccounts( CancellationToken cancellationToken )
+		/// <summary>
+		///	Lists all financial accounts.
+		///	Requires Lists -> Accounts role permission. Level - View.
+		/// </summary>
+		/// <param name="cancellationToken"></param>
+		/// <returns></returns>
+		public async Task< IEnumerable< NetSuiteAccount > > ListAccountsAsync( CancellationToken cancellationToken )
 		{
 			var mark = Mark.CreateNew();
 
@@ -195,10 +226,17 @@ namespace NetSuiteAccess.Services.Soap
 					.Select( r => r as Account )
 					.Select( r => new NetSuiteAccount() { Id = int.Parse( r.internalId ), Name = r.acctName, Number = r.acctNumber } ).ToArray();
 			}
-
-			return null;
+			
+			throw new NetSuiteException( response.searchResult.status.statusDetail[0].message );
 		}
 
+		/// <summary>
+		///	Find vendor by name.
+		///	Requires Lists -> Vendors role permission. Level - View.
+		/// </summary>
+		/// <param name="vendorName">Vendor name</param>
+		/// <param name="cancellationToken"></param>
+		/// <returns></returns>
 		public async Task< Vendor > GetVendorByNameAsync( string vendorName, CancellationToken cancellationToken )
 		{
 			if ( string.IsNullOrWhiteSpace( vendorName ) )
@@ -236,10 +274,18 @@ namespace NetSuiteAccess.Services.Soap
 					.Select( r => r as Vendor ).FirstOrDefault();
 			}
 
-			return null;
+			throw new NetSuiteException( response.searchResult.status.statusDetail[0].message );
 		}
 
-		public async System.Threading.Tasks.Task CreatePurchaseOrder( NetSuitePurchaseOrder order, long locationId, CancellationToken cancellationToken )
+		/// <summary>
+		///	Create purchase order.
+		///	Requires Transactions -> Purchase Order role permission. Level - Create or Full.
+		/// </summary>
+		/// <param name="order"></param>
+		/// <param name="locationId"></param>
+		/// <param name="cancellationToken"></param>
+		/// <returns></returns>
+		public async System.Threading.Tasks.Task CreatePurchaseOrderAsync( NetSuitePurchaseOrder order, long locationId, CancellationToken cancellationToken )
 		{
 			var mark = Mark.CreateNew();
 
@@ -252,12 +298,15 @@ namespace NetSuiteAccess.Services.Soap
 			var vendor = await this.GetVendorByNameAsync( order.SupplierName, cancellationToken ).ConfigureAwait( false );
 
 			if ( vendor == null )
+			{
+				NetSuiteLogger.LogTrace( string.Format( "Can't create purchase order in NetSuite! Vendor with name {0} doesn't exist in NetSuite!", order.SupplierName ) );
 				return;
+			}
 
 			var purchaseOrderRecord = new NetSuiteSoapWS.PurchaseOrder()
 			{
 				tranId = order.DocNumber,
-				createdDate = order.CreatedDateUtc, 
+				createdDate = order.CreatedDateUtc,
 				location = new RecordRef()
 				{
 					internalId = locationId.ToString()
@@ -265,7 +314,8 @@ namespace NetSuiteAccess.Services.Soap
 				entity = new RecordRef()
 				{
 					internalId = vendor.internalId
-				},
+				}, 
+				memo = order.PrivateNote
 			};
 
 			var purchaseOrderRecordItems = new List< PurchaseOrderItem >();
@@ -279,7 +329,10 @@ namespace NetSuiteAccess.Services.Soap
 					{
 						item = new RecordRef() { internalId = item.internalId }, 
 						quantity = orderItem.Quantity,
-						quantitySpecified = true
+						quantitySpecified = true,
+						rate = orderItem.UnitPrice.ToString(),
+						quantityBilled = orderItem.Quantity,
+						quantityBilledSpecified = order.PaymentStatus == NetSuitePaymentStatus.Paid, 
 					} );
 				}
 			}
@@ -294,6 +347,115 @@ namespace NetSuiteAccess.Services.Soap
 			{
 				throw new NetSuiteException( response.writeResponse.status.statusDetail[0].message );
 			}
+		}
+
+		/// <summary>
+		///	Update purchase order
+		///	Requires Transactions -> Purchase Order role permission. Level - Edit or Full.
+		/// </summary>
+		/// <param name="order"></param>
+		/// <param name="token"></param>
+		/// <returns></returns>
+		public async System.Threading.Tasks.Task UpdatePurchaseOrderAsync( NetSuitePurchaseOrder order, CancellationToken cancellationToken )
+		{
+			var mark = Mark.CreateNew();
+
+			if ( cancellationToken.IsCancellationRequested )
+			{
+				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
+			}
+
+			var vendor = await this.GetVendorByNameAsync( order.SupplierName, cancellationToken ).ConfigureAwait( false );
+
+			if ( vendor == null )
+			{
+				NetSuiteLogger.LogTrace( string.Format( "Can't create purchase order in NetSuite! Vendor with name {0} doesn't exist in NetSuite!", order.SupplierName ) );
+				return;
+			}
+
+			var purchaseOrderRecord = new NetSuiteSoapWS.PurchaseOrder()
+			{
+				internalId = order.Id,
+				tranId = order.DocNumber,
+				entity = new RecordRef()
+				{
+					internalId = vendor.internalId
+				}, 
+				memo = order.PrivateNote
+			};
+
+			var purchaseOrderRecordItems = new List< PurchaseOrderItem >();
+			
+			foreach( var orderItem in order.Items )
+			{
+				var item = await this.GetItemBySkuAsync( orderItem.Sku, cancellationToken ).ConfigureAwait( false );
+
+				if ( item != null)
+				{
+					purchaseOrderRecordItems.Add( new PurchaseOrderItem()
+					{
+						item = new RecordRef() { internalId = item.internalId }, 
+						quantity = orderItem.Quantity,
+						quantitySpecified = true,
+						rate = orderItem.UnitPrice.ToString()
+					} );
+				}
+			}
+
+			purchaseOrderRecord.itemList = new PurchaseOrderItemList()
+			{
+				item = purchaseOrderRecordItems.ToArray()
+			};
+
+			var response = await this.ThrottleRequestAsync( mark, ( token ) =>
+			{
+				return this._service.updateAsync( null, this._passport, null, null, null, purchaseOrderRecord );
+			}, purchaseOrderRecord.ToJson(), cancellationToken ).ConfigureAwait( false );
+
+			if ( !response.writeResponse.status.isSuccess )
+			{
+				throw new NetSuiteException( response.writeResponse.status.statusDetail[0].message );
+			}
+		}
+
+		/// <summary>
+		///	Lists all purchase orders
+		/// </summary>
+		/// <param name="order"></param>
+		/// <param name="cancellationToken"></param>
+		/// <returns></returns>
+		public async Task< IEnumerable< NetSuitePurchaseOrder > > GetAllPurchaseOrdersAsync( CancellationToken cancellationToken )
+		{
+			var mark = Mark.CreateNew();
+
+			if ( cancellationToken.IsCancellationRequested )
+			{
+				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
+			}
+
+			var purchaseOrdersSearchRequest = new TransactionSearchBasic()
+			{
+				   recordType = new SearchStringField()
+				   {
+					    @operator = SearchStringFieldOperator.@is,
+					    searchValue = "purchaseOrder",
+					    operatorSpecified = true
+				   }
+			};
+
+			var response = await this.ThrottleRequestAsync( mark, ( token ) =>
+			{
+				return this._service.searchAsync( null, this._passport, null, null, null, purchaseOrdersSearchRequest );
+			}, purchaseOrdersSearchRequest.ToJson(), cancellationToken ).ConfigureAwait( false );
+			
+			if ( response.searchResult.status.isSuccess )
+			{
+				return response.searchResult.recordList.Select( r => r as NetSuiteSoapWS.PurchaseOrder).Select( p => p.ToSVPurchaseOrder() );
+			}
+			
+			throw new NetSuiteException( response.searchResult.status.statusDetail[0].message );
 		}
 
 		private Task< T > ThrottleRequestAsync< T >( Mark mark, Func< CancellationToken, Task< T > > processor, string payload, CancellationToken token )

@@ -19,9 +19,15 @@ namespace NetSuiteAccess.Services.Common
 
 		public Task< IEnumerable< NetSuiteAccount > > GetAccountsAsync( CancellationToken token )
 		{
-			return _soapService.ListAccounts( token );
+			return _soapService.ListAccountsAsync( token );
 		}
 
+		/// <summary>
+		///	Get all inventory locations.
+		///	Requires Lists -> Locations role permission.
+		/// </summary>
+		/// <param name="token"></param>
+		/// <returns></returns>
 		public async Task< IEnumerable< NetSuiteLocation > > GetLocationsAsync( CancellationToken token )
 		{
 			var locations = new List< NetSuiteLocation >();
