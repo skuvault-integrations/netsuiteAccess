@@ -11,6 +11,7 @@ namespace NetSuiteAccess.Models
 		public string SupplierName { get; set; }
 		public DateTime ShipDate { get; set; }
 		public NetSuitePurchaseOrderItem[] Items { get; set; }
+		public string PrivateNote { get; set; }
 	}
 
 	public class NetSuitePurchaseOrderItem
@@ -33,7 +34,8 @@ namespace NetSuiteAccess.Models
 				ModifiedDateUtc = order.LastModifiedDate.FromRFC3339ToUtc(),
 				Status = order.Status,
 				Total = order.Total,
-				ShipDate = order.ShipDate
+				ShipDate = order.ShipDate,
+				PrivateNote = order.Memo
 			};
 
 			svPurchaseOrder.ShippingInfo = new NetSuiteShippingInfo();
@@ -67,6 +69,45 @@ namespace NetSuiteAccess.Models
 						Sku = itemInfo.ItemInfo != null ? itemInfo.ItemInfo.RefName : string.Empty,
 						Title = itemInfo.Description,
 						UnitPrice = itemInfo.Rate
+					} );
+				}
+			}
+			svPurchaseOrder.Items = items.ToArray();
+
+			return svPurchaseOrder;
+		}
+
+		public static NetSuitePurchaseOrder ToSVPurchaseOrder( this NetSuiteSoapWS.PurchaseOrder order )
+		{
+			var svPurchaseOrder = new NetSuitePurchaseOrder()
+			{
+				Id = order.internalId,
+				DocNumber = order.tranId,
+				CreatedDateUtc = order.createdDate,
+				ModifiedDateUtc = order.lastModifiedDate,
+				Status = order.status,
+				Total = (decimal)order.total,
+				ShipDate = order.shipDate,
+				PrivateNote = order.memo
+			};
+
+			if ( order.entity != null )
+			{
+				svPurchaseOrder.SupplierName = order.entity.name;
+			}
+
+			var items = new List< NetSuitePurchaseOrderItem >();
+
+			if ( order.itemList != null )
+			{
+				foreach( var item in order.itemList.item )
+				{
+					items.Add( new NetSuitePurchaseOrderItem()
+					{
+						 Quantity = (int)item.quantity,
+						 Sku = item.item.name,
+						 Title = item.description,
+						 UnitPrice = decimal.Parse( item.rate )
 					} );
 				}
 			}

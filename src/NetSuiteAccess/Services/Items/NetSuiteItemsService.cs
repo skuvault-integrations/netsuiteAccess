@@ -43,7 +43,8 @@ namespace NetSuiteAccess.Services.Items
 		}
 
 		/// <summary>
-		///	Creates inventory adjustment document in NetSuite
+		///	Creates inventory adjustment document in NetSuite.
+		///	Requires Transactions -> Adjust Inventory role permission.
 		/// </summary>
 		/// <param name="accountInternalId">Account</param>
 		/// <param name="warehouseName">Warehouse name (location)</param>
@@ -65,7 +66,8 @@ namespace NetSuiteAccess.Services.Items
 		}
 
 		/// <summary>
-		///	Creates inventory adjustment document inside NetSuite
+		///	Creates inventory adjustment document inside NetSuite.
+		///	Requires Transactions -> Adjust Inventory role permission.
 		/// </summary>
 		/// <param name="accountInternalId">Account</param>
 		/// <param name="warehouseName">Warehouse name (location)</param>
@@ -81,7 +83,7 @@ namespace NetSuiteAccess.Services.Items
 
 			foreach( var skuQuantity in skuQuantities )
 			{
-				var item = await this._service.GetItemByIdAsync( skuQuantity.Key, token ).ConfigureAwait( false );
+				var item = await this._service.GetItemBySkuAsync( skuQuantity.Key, token ).ConfigureAwait( false );
 
 				if ( item == null )
 					continue;
@@ -116,12 +118,13 @@ namespace NetSuiteAccess.Services.Items
 
 			if ( inventoryAdjustment.Count > 0 )
 			{
-				await this._service.AdjustInventory( accountId, inventoryAdjustment.ToArray(), token ).ConfigureAwait( false );
+				await this._service.AdjustInventoryAsync( accountId, inventoryAdjustment.ToArray(), token ).ConfigureAwait( false );
 			}
 		}
 
 		/// <summary>
 		///	Find item by sku and get it's hand on quantity in specified warehouse
+		///	Requires Lists -> Items role permission.
 		/// </summary>
 		/// <param name="sku">Sku (item displayName)</param>
 		/// <param name="warehouseName">Warehouse (location)</param>
@@ -129,7 +132,7 @@ namespace NetSuiteAccess.Services.Items
 		/// <returns></returns>
 		public async Task< int > GetSkuQuantity( string sku, string warehouseName, CancellationToken token )
 		{
-			var item = await this._service.GetItemByIdAsync( sku, token ).ConfigureAwait( false );
+			var item = await this._service.GetItemBySkuAsync( sku, token ).ConfigureAwait( false );
 
 			if ( item == null )
 				throw new NetSuiteItemNotFoundException( sku );
