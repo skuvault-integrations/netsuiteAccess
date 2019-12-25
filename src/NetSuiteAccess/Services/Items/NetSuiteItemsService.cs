@@ -1,5 +1,6 @@
 ﻿using CuttingEdge.Conditions;
 using NetSuiteAccess.Configuration;
+using NetSuiteAccess.Models;
 using NetSuiteAccess.Services.Soap;
 using NetSuiteSoapWS;
 using System;
@@ -144,6 +145,29 @@ namespace NetSuiteAccess.Services.Items
 				return 0;
 
 			return (int)warehouseInventory.quantityOnHand;
+		}
+
+		/// <summary>
+		///	Lists all items that were created or updated after specified date
+		///	Requires Lists -> Items role permission.
+		/// </summary>
+		/// <param name="startDateUtc"></param>
+		/// <param name="includeUpdated"></param>
+		/// <returns></returns>
+		public async Task< IEnumerable< NetSuiteItem > > GetItemsCreatedUpdatedAfterAsync( DateTime startDateUtc, bool includeUpdated, CancellationToken token )
+		{
+			var items = new List< InventoryItem >();
+			var createdItems = await this._service.GetItemsCreatedAfterAsync( startDateUtc, token ).ConfigureAwait( false );
+			items.AddRange( createdItems );
+
+			if ( includeUpdated )
+			{
+				var updatedItems = await this._service.GetItemsModifiedAfterAsync( startDateUtc, token ).ConfigureAwait( false );
+				var updatedItemsWithoutDublicates = updatedItems.Where( i => !createdItems.Any( cr => cr.itemId.Equals( i.itemId ) ) ).ToArray();
+				items.AddRange( updatedItemsWithoutDublicates );
+			}
+
+			return items.Select( i => i.ToSVItem() ).ToArray();
 		}
 	}
 }

@@ -3,6 +3,7 @@ using NetSuiteAccess.Services.Items;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -73,6 +74,22 @@ namespace NetSuiteTests
 				catch( NetSuiteItemNotFoundException )
 				{ }
 			}
+		}
+
+		[ Test ]
+		public void GetInventoryItemsCreatedAfterSpecifiedDate()
+		{
+			var createdDate = new DateTime( 2019, 12, 1 );
+			var newItems = this._itemsService.GetItemsCreatedUpdatedAfterAsync( createdDate, false, CancellationToken.None ).Result;
+			newItems.Count().Should().BeGreaterThan( 0 );
+		}
+
+		[ Test ]
+		public void GetInventoryItemsCreatedAndModifiedAfterSpecificDate()
+		{
+			var createOrModifiedDate = new DateTime( 2019, 12, 1 );
+			var items = this._itemsService.GetItemsCreatedUpdatedAfterAsync( createOrModifiedDate, true, CancellationToken.None ).Result;
+			items.Count().Should().BeGreaterThan( 0 );
 		}
 	}
 }

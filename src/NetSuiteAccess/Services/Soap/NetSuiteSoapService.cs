@@ -100,7 +100,7 @@ namespace NetSuiteAccess.Services.Soap
 			{
 				basic = new ItemSearchBasic()
 				{
-					displayName = new SearchStringField()
+					itemId = new SearchStringField()
 					{
 						@operator = SearchStringFieldOperator.@is,
 						operatorSpecified = true,
@@ -120,6 +120,88 @@ namespace NetSuiteAccess.Services.Soap
 			}
 			
 			throw new NetSuiteException( searchResponse.searchResult.status.statusDetail[0].message );
+		}
+
+		/// <summary>
+		///	Find inventory items created after specified date
+		/// </summary>
+		/// <param name="createdDateUtc"></param>
+		/// <param name="token"></param>
+		/// <returns></returns>
+		public async Task< IEnumerable< InventoryItem > > GetItemsCreatedAfterAsync( DateTime createdDateUtc, CancellationToken cancellationToken )
+		{
+			var mark = Mark.CreateNew();
+
+			if ( cancellationToken.IsCancellationRequested )
+			{
+				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
+			}
+
+			var itemsSearch = new ItemSearchBasic()
+			{
+				 created = new SearchDateField()
+				 {
+					@operator = SearchDateFieldOperator.onOrAfter,
+					operatorSpecified = true,
+					searchValue = createdDateUtc
+				 }
+			};
+
+			var response = await this.ThrottleRequestAsync( mark, ( token ) =>
+			{
+				return this._service.searchAsync( null, this._passport, null, null, null, itemsSearch );
+			}, itemsSearch.ToJson(), cancellationToken ).ConfigureAwait( false );
+
+			if ( response.searchResult.status.isSuccess )
+			{
+				return response.searchResult.recordList
+									.Select( r => r as InventoryItem )
+									.ToArray();
+			}
+
+			throw new NetSuiteException( response.searchResult.status.statusDetail[0].message );
+		}
+
+		/// <summary>
+		///	Find inventory items modified after specified date
+		/// </summary>
+		/// <param name="modifiedDateUtc"></param>
+		/// <param name="cancellationToken"></param>
+		/// <returns></returns>
+		public async Task< IEnumerable< InventoryItem > > GetItemsModifiedAfterAsync( DateTime modifiedDateUtc, CancellationToken cancellationToken )
+		{
+			var mark = Mark.CreateNew();
+
+			if ( cancellationToken.IsCancellationRequested )
+			{
+				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
+			}
+
+			var itemsSearch = new ItemSearchBasic()
+			{
+				 lastModifiedDate = new SearchDateField()
+				 {
+					@operator = SearchDateFieldOperator.onOrAfter,
+					operatorSpecified = true,
+					searchValue = modifiedDateUtc
+				 }
+			};
+
+			var response = await this.ThrottleRequestAsync( mark, ( token ) =>
+			{
+				return this._service.searchAsync( null, this._passport, null, null, null, itemsSearch );
+			}, itemsSearch.ToJson(), cancellationToken ).ConfigureAwait( false );
+
+			if ( response.searchResult.status.isSuccess )
+			{
+				return response.searchResult.recordList
+									.Select( r => r as InventoryItem )
+									.ToArray();
+			}
+
+			throw new NetSuiteException( response.searchResult.status.statusDetail[0].message );
 		}
 
 		/// <summary>
