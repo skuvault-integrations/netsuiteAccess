@@ -99,7 +99,8 @@ namespace NetSuiteAccess.Services.Orders
 		}
 
 		/// <summary>
-		///  Lists sales orders that were changed
+		///  Lists sales orders that were changed.
+		///  Requires Transactions -> Sales Order permission.
 		/// </summary>
 		/// <param name="startDateUtc"></param>
 		/// <param name="endDateUtc"></param>
@@ -130,6 +131,13 @@ namespace NetSuiteAccess.Services.Orders
 			return orders.ToArray();
 		}
 
+		/// <summary>
+		///	Fill sales order's customer property
+		///	Requires Lists -> Customers permission.
+		/// </summary>
+		/// <param name="order"></param>
+		/// <param name="token"></param>
+		/// <returns></returns>
 		private async Task FillCustomerData( NetSuiteSalesOrder order, CancellationToken token )
 		{
 			if ( order.Customer != null )

@@ -55,7 +55,7 @@ namespace NetSuiteTests
 		[ Test ]
 		public async Task CreatePurchaseOrder()
 		{
-			var docNumber = "PO_12347";
+			var docNumber = "PO_" + Guid.NewGuid().ToString();
 			var purchaseOrder = new NetSuitePurchaseOrder()
 			{
 				 DocNumber = docNumber,
@@ -80,6 +80,31 @@ namespace NetSuiteTests
 
 			var purchaseOrders = await this._ordersService.GetPurchaseOrdersAsync( DateTime.UtcNow.AddMinutes( -5 ), DateTime.UtcNow, CancellationToken.None );
 			purchaseOrders.FirstOrDefault( p => p.DocNumber.Equals( docNumber ) ).Should().NotBeNull();
+		}
+
+		[ Test ]
+		public async Task CreatePurchaseOrderWhereItemsNotExist()
+		{
+			var docNumber = "PO_" + Guid.NewGuid().ToString();
+			var purchaseOrder = new NetSuitePurchaseOrder()
+			{
+				 DocNumber = docNumber,
+				 CreatedDateUtc = DateTime.UtcNow,
+				 Items = new NetSuitePurchaseOrderItem[]
+				 {
+					 new NetSuitePurchaseOrderItem()
+					 {
+						Sku = "testsku1",
+						Quantity = 12
+					 }
+				 }, 
+				 SupplierName = "Samsung"
+			};
+
+			await this._ordersService.CreatePurchaseOrderAsync( purchaseOrder, "SkuVault", CancellationToken.None );
+
+			var purchaseOrders = await this._ordersService.GetPurchaseOrdersAsync( DateTime.UtcNow.AddMinutes( -5 ), DateTime.UtcNow, CancellationToken.None );
+			purchaseOrders.FirstOrDefault( p => p.DocNumber.Equals( docNumber ) ).Should().BeNull();
 		}
 	
 		[ Test ]

@@ -418,6 +418,13 @@ namespace NetSuiteAccess.Services.Soap
 					} );
 				}
 			}
+
+			if ( purchaseOrderRecordItems.Count == 0 )
+			{
+				NetSuiteLogger.LogTrace( "Can't create purchase order in NetSuite! PO items don't exist in NetSuite!" );
+				return;
+			}
+
 			purchaseOrderRecord.itemList = new PurchaseOrderItemList() { item = purchaseOrderRecordItems.ToArray() };
 
 			var response = await this.ThrottleRequestAsync( mark, ( token ) =>
