@@ -474,28 +474,31 @@ namespace NetSuiteAccess.Services.Soap
 				memo = order.PrivateNote
 			};
 
-			var purchaseOrderRecordItems = new List< PurchaseOrderItem >();
+			if ( order.Status.Equals( "Pending Receipt" ) )
+			{
+				var purchaseOrderRecordItems = new List< PurchaseOrderItem >();
 			
-			foreach( var orderItem in order.Items )
-			{
-				var item = await this.GetItemBySkuAsync( orderItem.Sku, cancellationToken ).ConfigureAwait( false );
-
-				if ( item != null)
+				foreach( var orderItem in order.Items )
 				{
-					purchaseOrderRecordItems.Add( new PurchaseOrderItem()
-					{
-						item = new RecordRef() { internalId = item.internalId }, 
-						quantity = orderItem.Quantity,
-						quantitySpecified = true,
-						rate = orderItem.UnitPrice.ToString()
-					} );
-				}
-			}
+					var item = await this.GetItemBySkuAsync( orderItem.Sku, cancellationToken ).ConfigureAwait( false );
 
-			purchaseOrderRecord.itemList = new PurchaseOrderItemList()
-			{
-				item = purchaseOrderRecordItems.ToArray()
-			};
+					if ( item != null)
+					{
+						purchaseOrderRecordItems.Add( new PurchaseOrderItem()
+						{
+							item = new RecordRef() { internalId = item.internalId }, 
+							quantity = orderItem.Quantity,
+							quantitySpecified = true,
+							rate = orderItem.UnitPrice.ToString()
+						} );
+					}
+				}
+
+				purchaseOrderRecord.itemList = new PurchaseOrderItemList()
+				{
+					item = purchaseOrderRecordItems.ToArray()
+				};	
+			}
 
 			var response = await this.ThrottleRequestAsync( mark, ( token ) =>
 			{

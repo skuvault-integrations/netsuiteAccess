@@ -30,7 +30,7 @@ namespace NetSuiteTests
 			svItem.WeightUnit.Should().Be( item.weightUnit.ToString() );
 			svItem.Manufacturer.Should().Be( item.manufacturer );
 			svItem.Price.Should().Be( item.cost );
-			svItem.MPN.Should().Be( item.mpn );
+			svItem.PartNumber.Should().Be( item.mpn );
 		}
 	}
 }

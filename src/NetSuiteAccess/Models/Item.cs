@@ -10,7 +10,7 @@ namespace NetSuiteAccess.Models
 		public double? Weight { get; set; }
 		public string WeightUnit { get; set; }
 		public double? Price { get; set; }
-		public string MPN { get; set; }
+		public string PartNumber { get; set; }
 		public string Manufacturer { get; set; }
 	}
 
@@ -26,7 +26,7 @@ namespace NetSuiteAccess.Models
 				WeightUnit = item.weightUnit.ToString(),	
 				Manufacturer = item.manufacturer,
 				Price = item.cost,
-				MPN = item.mpn
+				PartNumber = item.mpn
 			};
 
 			if ( item.@class != null )
