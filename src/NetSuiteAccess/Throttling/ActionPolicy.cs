@@ -2,6 +2,7 @@
 using NetSuiteAccess.Exceptions;
 using Polly;
 using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace NetSuiteAccess.Throttling
@@ -43,7 +44,28 @@ namespace NetSuiteAccess.Throttling
 					})
 				.ExecuteAsync( async () =>
 				{
-					return await funcToThrottle().ConfigureAwait( false );
+					try
+					{
+						return await funcToThrottle().ConfigureAwait( false );
+					}
+					catch ( Exception exception )
+					{
+						NetSuiteException netsuiteException = null;
+						var exceptionDetails = string.Empty;
+
+						if ( extraLogInfo != null )
+							exceptionDetails = extraLogInfo();
+
+						if ( exception is HttpRequestException )
+							netsuiteException = new NetSuiteNetworkException( exceptionDetails, exception );
+						else
+						{
+							netsuiteException = new NetSuiteException( exceptionDetails, exception );
+							onException?.Invoke(netsuiteException);
+						}
+
+						throw netsuiteException;
+					}
 				});
 		}
 
