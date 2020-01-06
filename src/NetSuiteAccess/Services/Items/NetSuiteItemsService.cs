@@ -163,7 +163,7 @@ namespace NetSuiteAccess.Services.Items
 			if ( includeUpdated )
 			{
 				var updatedItems = await this._service.GetItemsModifiedAfterAsync( startDateUtc, token ).ConfigureAwait( false );
-				var updatedItemsWithoutDublicates = updatedItems.Where( i => !createdItems.Any( cr => cr.itemId.Equals( i.itemId ) ) ).ToArray();
+				var updatedItemsWithoutDublicates = updatedItems.Where( i => !createdItems.Where( cr => !string.IsNullOrWhiteSpace( cr.itemId ) ).Any( cr => cr.itemId.Equals( i.itemId ) ) ).ToArray();
 				items.AddRange( updatedItemsWithoutDublicates );
 			}
 
