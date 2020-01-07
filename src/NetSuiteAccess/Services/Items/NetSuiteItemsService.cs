@@ -93,6 +93,10 @@ namespace NetSuiteAccess.Services.Items
 				if ( item.useBins )
 					continue;
 
+				// we can't specify quantity for parent items
+				if ( item.matrixType == ItemMatrixType._parent && item.matrixTypeSpecified )
+					continue;
+
 				var itemInventory = await this._service.GetItemInventoryAsync( item, token ).ConfigureAwait( false );
 
 				if ( itemInventory == null )

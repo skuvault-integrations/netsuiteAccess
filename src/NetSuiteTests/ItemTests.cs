@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using NetSuiteAccess.Exceptions;
 using NetSuiteAccess.Services.Items;
 using NUnit.Framework;
 using System;
@@ -74,6 +75,20 @@ namespace NetSuiteTests
 				catch( NetSuiteItemNotFoundException )
 				{ }
 			}
+		}
+
+		[ Test ]
+		public void UpdateParentSkuQuantityAsync()
+		{
+			var inventory = new Dictionary< string, int >
+			{
+				{ "TestParent3", 10 }
+			};
+
+			Assert.DoesNotThrowAsync( async () =>
+			{
+				await this._itemsService.UpdateSkusQuantitiesAsync( accountId, warehouse, inventory, CancellationToken.None );
+			} );
 		}
 
 		[ Test ]
