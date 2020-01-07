@@ -123,12 +123,13 @@ namespace NetSuiteAccess.Services.Soap
 		}
 
 		/// <summary>
-		///	Find inventory items created after specified date
+		///	Find inventory items created after specified date.
+		///	Requires Lists -> Items role permission.
 		/// </summary>
 		/// <param name="createdDateUtc"></param>
 		/// <param name="token"></param>
 		/// <returns></returns>
-		public async Task< IEnumerable< InventoryItem > > GetItemsCreatedAfterAsync( DateTime createdDateUtc, CancellationToken cancellationToken )
+		public async Task< IEnumerable< Record > > GetItemsCreatedAfterAsync( DateTime createdDateUtc, CancellationToken cancellationToken )
 		{
 			var mark = Mark.CreateNew();
 
@@ -144,7 +145,8 @@ namespace NetSuiteAccess.Services.Soap
 				 {
 					@operator = SearchDateFieldOperator.onOrAfter,
 					operatorSpecified = true,
-					searchValue = createdDateUtc
+					searchValue = createdDateUtc,
+					searchValueSpecified = true
 				 }
 			};
 
@@ -155,21 +157,21 @@ namespace NetSuiteAccess.Services.Soap
 
 			if ( response.searchResult.status.isSuccess )
 			{
-				return response.searchResult.recordList
-									.Select( r => r as InventoryItem )
-									.ToArray();
+
+				return response.searchResult.recordList;
 			}
 
 			throw new NetSuiteException( response.searchResult.status.statusDetail[0].message );
 		}
 
 		/// <summary>
-		///	Find inventory items modified after specified date
+		///	Find inventory items modified after specified date.
+		///	Requires Lists -> Items role permission.
 		/// </summary>
 		/// <param name="modifiedDateUtc"></param>
 		/// <param name="cancellationToken"></param>
 		/// <returns></returns>
-		public async Task< IEnumerable< InventoryItem > > GetItemsModifiedAfterAsync( DateTime modifiedDateUtc, CancellationToken cancellationToken )
+		public async Task< IEnumerable< Record > > GetItemsModifiedAfterAsync( DateTime modifiedDateUtc, CancellationToken cancellationToken )
 		{
 			var mark = Mark.CreateNew();
 
@@ -185,7 +187,8 @@ namespace NetSuiteAccess.Services.Soap
 				 {
 					@operator = SearchDateFieldOperator.onOrAfter,
 					operatorSpecified = true,
-					searchValue = modifiedDateUtc
+					searchValue = modifiedDateUtc,
+					searchValueSpecified = true
 				 }
 			};
 
@@ -196,9 +199,7 @@ namespace NetSuiteAccess.Services.Soap
 
 			if ( response.searchResult.status.isSuccess )
 			{
-				return response.searchResult.recordList
-									.Select( r => r as InventoryItem )
-									.ToArray();
+				return response.searchResult.recordList;
 			}
 
 			throw new NetSuiteException( response.searchResult.status.statusDetail[0].message );

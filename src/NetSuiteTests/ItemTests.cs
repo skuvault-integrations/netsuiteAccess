@@ -91,5 +91,13 @@ namespace NetSuiteTests
 			var items = this._itemsService.GetItemsCreatedUpdatedAfterAsync( createOrModifiedDate, true, CancellationToken.None ).Result;
 			items.Count().Should().BeGreaterThan( 0 );
 		}
+
+		[ Test ]
+		public void GetEmptyInventoryItemsListCreatedAndModifiedAfterSpecificDate()
+		{
+			var createOrModifiedDate = new DateTime( 2100, 12, 1 );
+			var items = this._itemsService.GetItemsCreatedUpdatedAfterAsync( createOrModifiedDate, true, CancellationToken.None ).Result;
+			items.Count().Should().Be( 0 );
+		}
 	}
 }

@@ -36,5 +36,47 @@ namespace NetSuiteAccess.Models
 
 			return svItem;
 		}
+
+		public static NetSuiteItem ToSVItem( this SerializedInventoryItem serializedInventoryItem )
+		{
+			var svItem = new NetSuiteItem()
+			{
+				Name = serializedInventoryItem.displayName,
+				Sku = serializedInventoryItem.itemId,
+				Weight = serializedInventoryItem.weight,
+				WeightUnit = serializedInventoryItem.weightUnit.ToString(),	
+				Manufacturer = serializedInventoryItem.manufacturer,
+				Price = serializedInventoryItem.cost,
+				PartNumber = serializedInventoryItem.mpn
+			};
+
+			if ( serializedInventoryItem.@class != null )
+			{
+				svItem.CategoryName = serializedInventoryItem.@class.name;
+			}
+
+			return svItem;
+		}
+
+		public static NetSuiteItem ToSVItem( this LotNumberedInventoryItem lotInventoryItem )
+		{
+			var svItem = new NetSuiteItem()
+			{
+				Name = lotInventoryItem.displayName,
+				Sku = lotInventoryItem.itemId,
+				Weight = lotInventoryItem.weight,
+				WeightUnit = lotInventoryItem.weightUnit.ToString(),	
+				Manufacturer = lotInventoryItem.manufacturer,
+				Price = lotInventoryItem.cost,
+				PartNumber = lotInventoryItem.mpn
+			};
+
+			if ( lotInventoryItem.@class != null )
+			{
+				svItem.CategoryName = lotInventoryItem.@class.name;
+			}
+
+			return svItem;
+		}
 	}
 }

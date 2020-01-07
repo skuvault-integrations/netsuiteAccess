@@ -156,18 +156,28 @@ namespace NetSuiteAccess.Services.Items
 		/// <returns></returns>
 		public async Task< IEnumerable< NetSuiteItem > > GetItemsCreatedUpdatedAfterAsync( DateTime startDateUtc, bool includeUpdated, CancellationToken token )
 		{
-			var items = new List< InventoryItem >();
-			var createdItems = await this._service.GetItemsCreatedAfterAsync( startDateUtc, token ).ConfigureAwait( false );
+			var items = new List< NetSuiteItem >();
+			var createdItems = this.ToNetSuiteItems( await this._service.GetItemsCreatedAfterAsync( startDateUtc, token ).ConfigureAwait( false ) );
 			items.AddRange( createdItems );
 
 			if ( includeUpdated )
 			{
-				var updatedItems = await this._service.GetItemsModifiedAfterAsync( startDateUtc, token ).ConfigureAwait( false );
-				var updatedItemsWithoutDublicates = updatedItems.Where( i => !createdItems.Where( cr => !string.IsNullOrWhiteSpace( cr.itemId ) ).Any( cr => cr.itemId.Equals( i.itemId ) ) ).ToArray();
+				var updatedItems = this.ToNetSuiteItems( await this._service.GetItemsModifiedAfterAsync( startDateUtc, token ).ConfigureAwait( false ) );
+				var updatedItemsWithoutDublicates = updatedItems.Where( i => !createdItems.Where( cr => !string.IsNullOrWhiteSpace( cr.Sku ) ).Any( cr => cr.Sku.Equals( i.Sku ) ) ).ToArray();
 				items.AddRange( updatedItemsWithoutDublicates );
 			}
 
-			return items.Select( i => i.ToSVItem() ).ToArray();
+			return items.ToArray();
+		}
+
+		private IEnumerable< NetSuiteItem > ToNetSuiteItems( IEnumerable< Record > records )
+		{
+			var items = new List< NetSuiteItem >();
+			items.AddRange( records.OfType< InventoryItem >().Select( r => r.ToSVItem() ) );
+			items.AddRange( records.OfType< SerializedInventoryItem >().Select( r => r.ToSVItem() ) );
+			items.AddRange( records.OfType< LotNumberedInventoryItem >().Select( r => r.ToSVItem() ) );
+
+			return items;
 		}
 	}
 }
