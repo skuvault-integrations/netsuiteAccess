@@ -100,6 +100,13 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		public void GetAllInventoryItems()
+		{
+			var newItems = this._itemsService.GetItemsCreatedUpdatedAfterAsync( DateTime.MinValue, true, CancellationToken.None ).Result;
+			newItems.Count().Should().BeGreaterThan( 0 );
+		}
+
+		[ Test ]
 		public void GetInventoryItemsCreatedAndModifiedAfterSpecificDate()
 		{
 			var createOrModifiedDate = new DateTime( 2019, 12, 1 );

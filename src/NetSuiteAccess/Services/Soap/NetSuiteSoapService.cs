@@ -145,8 +145,13 @@ namespace NetSuiteAccess.Services.Soap
 				 {
 					@operator = SearchDateFieldOperator.onOrAfter,
 					operatorSpecified = true,
-					searchValue = createdDateUtc,
+					searchValue = createdDateUtc == DateTime.MinValue ? new DateTime( 1970, 1, 1) : createdDateUtc,
 					searchValueSpecified = true
+				 }, 
+				 isInactive = new SearchBooleanField()
+				 {
+					 searchValue = false,
+					 searchValueSpecified = true
 				 }
 			};
 
@@ -187,8 +192,13 @@ namespace NetSuiteAccess.Services.Soap
 				 {
 					@operator = SearchDateFieldOperator.onOrAfter,
 					operatorSpecified = true,
-					searchValue = modifiedDateUtc,
+					searchValue = modifiedDateUtc == DateTime.MinValue ? new DateTime( 1970, 1, 1 ) : modifiedDateUtc,
 					searchValueSpecified = true
+				 },
+				 isInactive = new SearchBooleanField()
+				 {
+					 searchValue = false,
+					 searchValueSpecified = true
 				 }
 			};
 
