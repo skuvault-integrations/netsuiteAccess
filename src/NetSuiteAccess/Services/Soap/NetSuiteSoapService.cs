@@ -485,10 +485,9 @@ namespace NetSuiteAccess.Services.Soap
 				memo = order.PrivateNote
 			};
 
+			var purchaseOrderRecordItems = new List< PurchaseOrderItem >();
 			if ( order.Status.Equals( "Pending Receipt" ) )
 			{
-				var purchaseOrderRecordItems = new List< PurchaseOrderItem >();
-			
 				foreach( var orderItem in order.Items )
 				{
 					var item = await this.GetItemBySkuAsync( orderItem.Sku, cancellationToken ).ConfigureAwait( false );
@@ -509,6 +508,12 @@ namespace NetSuiteAccess.Services.Soap
 				{
 					item = purchaseOrderRecordItems.ToArray()
 				};	
+			}
+
+			if ( purchaseOrderRecordItems.Count == 0 )
+			{
+				NetSuiteLogger.LogTrace( "Can't update purchase order in NetSuite! PO items don't exist in NetSuite!" );
+				return;
 			}
 
 			var response = await this.ThrottleRequestAsync( mark, ( token ) =>
