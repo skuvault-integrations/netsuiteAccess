@@ -108,18 +108,9 @@ namespace NetSuiteAccess.Services.Soap
 					}
 				}
 			};
-			
-			var searchResponse = await this.ThrottleRequestAsync( mark, ( token ) =>
-			{
-				return this._service.searchAsync( null, this._passport, null, null, null, searchRecord );
-			}, searchRecord.ToJson(), cancellationToken ).ConfigureAwait( false );
-
-			if ( searchResponse.searchResult.status.isSuccess )
-			{
-				return searchResponse.searchResult.recordList.FirstOrDefault() as InventoryItem;
-			}
-			
-			throw new NetSuiteException( searchResponse.searchResult.status.statusDetail[0].message );
+		
+			var response = await this.SearchRecords( searchRecord, mark, cancellationToken ).ConfigureAwait( false );
+			return response.OfType< InventoryItem >().FirstOrDefault();
 		}
 
 		/// <summary>
@@ -129,7 +120,7 @@ namespace NetSuiteAccess.Services.Soap
 		/// <param name="createdDateUtc"></param>
 		/// <param name="token"></param>
 		/// <returns></returns>
-		public async Task< IEnumerable< Record > > GetItemsCreatedAfterAsync( DateTime createdDateUtc, CancellationToken cancellationToken )
+		public Task< IEnumerable< Record > > GetItemsCreatedAfterAsync( DateTime createdDateUtc, CancellationToken cancellationToken )
 		{
 			var mark = Mark.CreateNew();
 
@@ -155,18 +146,7 @@ namespace NetSuiteAccess.Services.Soap
 				 }
 			};
 
-			var response = await this.ThrottleRequestAsync( mark, ( token ) =>
-			{
-				return this._service.searchAsync( null, this._passport, null, null, null, itemsSearch );
-			}, itemsSearch.ToJson(), cancellationToken ).ConfigureAwait( false );
-
-			if ( response.searchResult.status.isSuccess )
-			{
-
-				return response.searchResult.recordList;
-			}
-
-			throw new NetSuiteException( response.searchResult.status.statusDetail[0].message );
+			return this.SearchRecords( itemsSearch, mark, cancellationToken );
 		}
 
 		/// <summary>
@@ -176,7 +156,7 @@ namespace NetSuiteAccess.Services.Soap
 		/// <param name="modifiedDateUtc"></param>
 		/// <param name="cancellationToken"></param>
 		/// <returns></returns>
-		public async Task< IEnumerable< Record > > GetItemsModifiedAfterAsync( DateTime modifiedDateUtc, CancellationToken cancellationToken )
+		public Task< IEnumerable< Record > > GetItemsModifiedAfterAsync( DateTime modifiedDateUtc, CancellationToken cancellationToken )
 		{
 			var mark = Mark.CreateNew();
 
@@ -202,17 +182,7 @@ namespace NetSuiteAccess.Services.Soap
 				 }
 			};
 
-			var response = await this.ThrottleRequestAsync( mark, ( token ) =>
-			{
-				return this._service.searchAsync( null, this._passport, null, null, null, itemsSearch );
-			}, itemsSearch.ToJson(), cancellationToken ).ConfigureAwait( false );
-
-			if ( response.searchResult.status.isSuccess )
-			{
-				return response.searchResult.recordList;
-			}
-
-			throw new NetSuiteException( response.searchResult.status.statusDetail[0].message );
+			return this.SearchRecords( itemsSearch, mark, cancellationToken );
 		}
 
 		/// <summary>
@@ -308,19 +278,9 @@ namespace NetSuiteAccess.Services.Soap
 			}
 
 			var accountsSearch = new AccountSearch();
-			var response = await this.ThrottleRequestAsync( mark, ( token ) =>
-			{
-				return this._service.searchAsync( null, this._passport, null, null, null, accountsSearch );
-			}, accountsSearch.ToJson(), cancellationToken ).ConfigureAwait( false );
 
-			if ( response.searchResult.status.isSuccess )
-			{
-				return response.searchResult.recordList
-					.Select( r => r as Account )
-					.Select( r => new NetSuiteAccount() { Id = int.Parse( r.internalId ), Name = r.acctName, Number = r.acctNumber } ).ToArray();
-			}
-			
-			throw new NetSuiteException( response.searchResult.status.statusDetail[0].message );
+			var response = await this.SearchRecords( accountsSearch, mark, cancellationToken ).ConfigureAwait( false );
+			return response.OfType< Account >().Select( r => new NetSuiteAccount() { Id = int.Parse( r.internalId ), Name = r.acctName, Number = r.acctNumber } );
 		}
 
 		/// <summary>
@@ -356,18 +316,8 @@ namespace NetSuiteAccess.Services.Soap
 				}
 			};
 
-			var response = await this.ThrottleRequestAsync( mark, ( token ) =>
-			{
-				return this._service.searchAsync( null, this._passport, null, null, null, vendorSearch );
-			}, vendorSearch.ToJson(), cancellationToken ).ConfigureAwait( false );
-
-			if ( response.searchResult.status.isSuccess )
-			{
-				return response.searchResult.recordList
-					.Select( r => r as Vendor ).FirstOrDefault();
-			}
-
-			throw new NetSuiteException( response.searchResult.status.statusDetail[0].message );
+			var response = await this.SearchRecords( vendorSearch, mark, cancellationToken ).ConfigureAwait( false );
+			return response.OfType< Vendor >().FirstOrDefault();
 		}
 
 		/// <summary>
@@ -553,17 +503,52 @@ namespace NetSuiteAccess.Services.Soap
 				   }
 			};
 
+			var response = await this.SearchRecords( purchaseOrdersSearchRequest, mark, cancellationToken ).ConfigureAwait( false );
+			return response.OfType< NetSuiteSoapWS.PurchaseOrder >().Select( p => p.ToSVPurchaseOrder() );
+		}
+
+		private async Task< IEnumerable< Record > > SearchRecords( SearchRecord searchRecord, Mark mark, CancellationToken cancellationToken )
+		{
+			var result = new List< Record >();
 			var response = await this.ThrottleRequestAsync( mark, ( token ) =>
 			{
-				return this._service.searchAsync( null, this._passport, null, null, null, purchaseOrdersSearchRequest );
-			}, purchaseOrdersSearchRequest.ToJson(), cancellationToken ).ConfigureAwait( false );
-			
-			if ( response.searchResult.status.isSuccess )
+				return this._service.searchAsync( null, this._passport, null, null, null, searchRecord );
+			}, searchRecord.ToJson(), cancellationToken ).ConfigureAwait( false );
+
+			var searchResult = response.searchResult;
+			if ( searchResult.status.isSuccess )
 			{
-				return response.searchResult.recordList.Select( r => r as NetSuiteSoapWS.PurchaseOrder).Select( p => p.ToSVPurchaseOrder() );
+				result.AddRange( searchResult.recordList );
+
+				if ( searchResult.totalPages > 1 )
+				{
+					result.AddRange( await this.CollectDataFromExtraPages< Record >( searchResult.searchId, searchResult.totalPages ).ConfigureAwait( false ) );
+				}
+
+				return result;
 			}
 			
 			throw new NetSuiteException( response.searchResult.status.statusDetail[0].message );
+		}
+
+		private async Task< IEnumerable< T > > CollectDataFromExtraPages< T >( string searchId, int totalPages )
+		{
+			var result = new List< T >();
+			int pageIndex = 2;
+			while ( pageIndex <= totalPages )
+			{
+				var searchMoreResponse = await this._service.searchMoreWithIdAsync( null, this._passport, null, null, null, searchId, pageIndex ).ConfigureAwait( false );
+				++pageIndex;
+
+				if ( !searchMoreResponse.searchResult.status.isSuccess )
+				{
+					break;
+				}
+
+				result.AddRange( searchMoreResponse.searchResult.recordList.OfType< T >() );
+			}
+
+			return result;
 		}
 
 		private Task< T > ThrottleRequestAsync< T >( Mark mark, Func< CancellationToken, Task< T > > processor, string payload, CancellationToken token )
