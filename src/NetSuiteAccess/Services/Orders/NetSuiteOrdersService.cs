@@ -37,8 +37,7 @@ namespace NetSuiteAccess.Services.Orders
 		/// <returns></returns>
 		public async Task CreatePurchaseOrderAsync( NetSuitePurchaseOrder order, string locationName, CancellationToken token )
 		{
-			var locations = await this._commonService.GetLocationsAsync( token ).ConfigureAwait( false );
-			var location = locations.Where( l => l.Name.ToLower().Equals( locationName.ToLower() ) ).FirstOrDefault();
+			var location = await this.GetLocationByNameAsync( locationName, token ).ConfigureAwait( false );
 
 			if ( location == null )
 				throw new NetSuiteException( string.Format( "Location with name {0} is not found in NetSuite!", locationName ) );
@@ -149,6 +148,64 @@ namespace NetSuiteAccess.Services.Orders
 					order.Customer = customerInfo;
 				}
 			}
+		}
+
+		/// <summary>
+		///	Creates sales order in NetSuite
+		/// </summary>
+		/// <param name="order">Sales order</param>
+		/// <param name="token">Cancellation token</param>
+		/// <returns></returns>
+		public async Task CreateSalesOrderAsync( NetSuiteSalesOrder order, string locationName, CancellationToken token )
+		{
+			var location = await this.GetLocationByNameAsync( locationName, token ).ConfigureAwait( false );
+
+			if ( location == null )
+			{
+				throw new NetSuiteException( string.Format( "Location with name {0} is not found in NetSuite!", locationName ) );
+			}
+
+			var customer = await this._customersService.GetCustomerInfoByEmailAsync( order.Customer.Email, token ).ConfigureAwait( false );
+
+			if ( customer == null )
+			{
+				NetSuiteLogger.LogTrace( string.Format( "Can't create sales order in NetSuite! Customer with email {0} was not found!", order.Customer.Email ) );
+				return;
+			}
+
+			await this._soapService.CreateSalesOrderAsync( order, location.Id, customer.Id, token ).ConfigureAwait( false );
+		}
+
+		/// <summary>
+		///	Updates existing sales order in NetSuite
+		/// </summary>
+		/// <param name="order">Sales order</param>
+		/// <param name="">Cancellation token</param>
+		/// <returns></returns>
+		public async Task UpdateSalesOrderAsync( NetSuiteSalesOrder order, string locationName, CancellationToken token )
+		{
+			var location = await this.GetLocationByNameAsync( locationName, token ).ConfigureAwait( false );
+
+			if ( location == null )
+			{
+				throw new NetSuiteException( string.Format( "Location with name {0} is not found in NetSuite!", locationName ) );
+			}
+
+			var customer = await this._customersService.GetCustomerInfoByEmailAsync( order.Customer.Email, token ).ConfigureAwait( false );
+
+			if ( customer == null )
+			{
+				NetSuiteLogger.LogTrace( string.Format( "Can't update sales order in NetSuite! Customer with email {0} was not found!", order.Customer.Email ) );
+				return;
+			}
+
+			await this._soapService.UpdateSalesOrderAsync( order, location.Id, customer.Id, token ).ConfigureAwait( false );
+		}
+
+		private async Task< NetSuiteLocation > GetLocationByNameAsync( string locationName, CancellationToken token )
+		{
+			var locations = await this._commonService.GetLocationsAsync( token ).ConfigureAwait( false );
+			return locations.FirstOrDefault( l => l.Name.ToLower().Equals( locationName.ToLower() ) );
 		}
 	}
 }

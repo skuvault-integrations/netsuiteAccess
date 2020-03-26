@@ -17,4 +17,20 @@ namespace NetSuiteAccess.Models
 		[ JsonProperty( "phone" ) ]
 		public string Phone { get; set; }
 	}
+
+	public static class CustomerExtensions
+	{
+		public static NetSuiteCustomer ToSVCustomer( this NetSuiteSoapWS.Customer customer )
+		{
+			return new NetSuiteCustomer()
+			{
+				Id = long.Parse( customer.internalId ),
+				CompanyName = customer.companyName,
+				FirstName = customer.firstName,
+				LastName = customer.lastName,
+				Email = customer.email,
+				Phone = customer.phone
+			};
+		}
+	}
 }

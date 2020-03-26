@@ -7,5 +7,6 @@ namespace NetSuiteAccess.Services.Customers
 	public interface INetSuiteCustomersService
 	{
 		Task< NetSuiteCustomer > GetCustomerInfoByIdAsync( long customerId, CancellationToken token );
+		Task< NetSuiteCustomer > GetCustomerInfoByEmailAsync( string email, CancellationToken token );
 	}
 }

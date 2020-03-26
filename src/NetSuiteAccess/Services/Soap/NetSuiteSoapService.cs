@@ -341,6 +341,42 @@ namespace NetSuiteAccess.Services.Soap
 		}
 
 		/// <summary>
+		///	Find customer by email
+		/// </summary>
+		/// <param name="email"></param>
+		/// <param name="cancellationToken"></param>
+		/// <returns></returns>
+		public async Task< Customer > GetCustomerByEmailAsync( string email, CancellationToken cancellationToken )
+		{
+			if ( string.IsNullOrWhiteSpace( email ) )
+				return null;
+
+			var mark = Mark.CreateNew();
+
+			if ( cancellationToken.IsCancellationRequested )
+			{
+				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
+			}
+
+			var customerSearch = new CustomerSearch()
+			{
+				basic = new CustomerSearchBasic()
+				{
+					email = new SearchStringField()
+					{
+						@operator = SearchStringFieldOperator.@is,
+						operatorSpecified = true,
+						searchValue = email
+					}
+				}
+			};
+
+			var response = await this.SearchRecords( customerSearch, mark, cancellationToken ).ConfigureAwait( false );
+			return response.OfType< Customer >().FirstOrDefault();
+		}
+
+		/// <summary>
 		///	Create purchase order.
 		///	Requires Transactions -> Purchase Order role permission. Level - Create or Full.
 		/// </summary>
@@ -569,6 +605,134 @@ namespace NetSuiteAccess.Services.Soap
 			}
 
 			return result;
+		}
+
+		/// <summary>
+		///	Creates sales order
+		/// </summary>
+		/// <param name="order">Sales order</param>
+		/// <param name="cancellationToken">Cancellation token</param>
+		/// <returns></returns>
+		public async System.Threading.Tasks.Task CreateSalesOrderAsync( NetSuiteSalesOrder order, long locationId, long customerId, CancellationToken cancellationToken )
+		{
+			var mark = Mark.CreateNew();
+
+			if ( cancellationToken.IsCancellationRequested )
+			{
+				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
+			}
+
+			var record = new NetSuiteSoapWS.SalesOrder()
+			{
+				tranId = order.DocNumber,
+				location = new RecordRef()
+				{
+					internalId = locationId.ToString()
+				}, 
+				entity = new RecordRef()
+				{
+					internalId = customerId.ToString()
+				}, 
+			};
+
+			var recordItems = new List< NetSuiteSoapWS.SalesOrderItem >();
+			foreach( var orderItem in order.Items )
+			{
+				var item = await this.GetItemBySkuAsync( orderItem.Sku, cancellationToken ).ConfigureAwait( false );
+
+				if ( item != null)
+				{
+					recordItems.Add( new SalesOrderItem()
+					{
+						item = new RecordRef() { internalId = item.internalId }, 
+						quantity = orderItem.Quantity,
+						quantitySpecified = true
+					} );
+				}
+			}
+
+			if ( recordItems.Count == 0 )
+			{
+				NetSuiteLogger.LogTrace( "Can't create sales order in NetSuite! SO items don't exist in NetSuite!" );
+				return;
+			}
+
+			record.itemList = new SalesOrderItemList() {  item = recordItems.ToArray() };
+
+			var response = await this.ThrottleRequestAsync( mark, ( token ) =>
+			{
+				return this._service.addAsync( null, this._passport, null, null, null, record );
+			}, order.ToJson(), cancellationToken ).ConfigureAwait( false );
+
+			if ( !response.writeResponse.status.isSuccess )
+			{
+				throw new NetSuiteException( response.writeResponse.status.statusDetail[0].message );
+			}
+		}
+
+		/// <summary>
+		///	Updates sales order
+		/// </summary>
+		/// <param name="order">Sales order</param>
+		/// <param name="cancellationToken">Cancellation token</param>
+		/// <returns></returns>
+		public async System.Threading.Tasks.Task UpdateSalesOrderAsync( NetSuiteSalesOrder order, long locationId, long customerId, CancellationToken cancellationToken )
+		{
+			var mark = Mark.CreateNew();
+
+			if ( cancellationToken.IsCancellationRequested )
+			{
+				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
+			}
+
+			var record = new NetSuiteSoapWS.SalesOrder()
+			{
+				internalId = order.Id,
+				entity = new RecordRef()
+				{
+					internalId = customerId.ToString()
+				},
+				location = new RecordRef()
+				{
+					internalId = locationId.ToString()
+				}
+			};
+
+			var recordItems = new List< NetSuiteSoapWS.SalesOrderItem >();
+			foreach( var orderItem in order.Items )
+			{
+				var item = await this.GetItemBySkuAsync( orderItem.Sku, cancellationToken ).ConfigureAwait( false );
+
+				if ( item != null)
+				{
+					recordItems.Add( new SalesOrderItem()
+					{
+						item = new RecordRef() { internalId = item.internalId }, 
+						quantity = orderItem.Quantity,
+						quantitySpecified = true
+					} );
+				}
+			}
+
+			if ( recordItems.Count == 0 )
+			{
+				NetSuiteLogger.LogTrace( "Can't update sales order in NetSuite! SO items don't exist in NetSuite!" );
+				return;
+			}
+
+			record.itemList = new SalesOrderItemList() {  item = recordItems.ToArray() };
+
+			var response = await this.ThrottleRequestAsync( mark, ( token ) =>
+			{
+				return this._service.updateAsync( null, this._passport, null, null, null, record );
+			}, record.ToJson(), cancellationToken ).ConfigureAwait( false );
+
+			if ( !response.writeResponse.status.isSuccess )
+			{
+				throw new NetSuiteException( response.writeResponse.status.statusDetail[0].message );
+			}
 		}
 
 		private Task< T > ThrottleRequestAsync< T >( Mark mark, Func< CancellationToken, Task< T > > processor, string payload, CancellationToken token )
