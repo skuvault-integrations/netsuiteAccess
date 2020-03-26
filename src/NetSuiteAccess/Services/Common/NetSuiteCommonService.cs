@@ -28,18 +28,9 @@ namespace NetSuiteAccess.Services.Common
 		/// </summary>
 		/// <param name="token"></param>
 		/// <returns></returns>
-		public async Task< IEnumerable< NetSuiteLocation > > GetLocationsAsync( CancellationToken token )
+		public Task< IEnumerable< NetSuiteLocation > > GetLocationsAsync( CancellationToken token )
 		{
-			var locations = new List< NetSuiteLocation >();
-			var locationsIds = await base.GetEntitiesIds( new ListLocationsCommand( base.Config ), Config.LocationsPageSize, token ).ConfigureAwait( false );
-
-			foreach( var locationId in locationsIds )
-			{
-				var location = await base.GetAsync< NetSuiteLocation >( new GetLocationCommand( base.Config, locationId ), token ).ConfigureAwait( false );
-				locations.Add( location );
-			}
-
-			return locations.ToArray();
+			return _soapService.ListLocationsAsync( token );
 		}
 	}
 }
