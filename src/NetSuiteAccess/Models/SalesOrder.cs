@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace NetSuiteAccess.Models
 {
@@ -89,6 +90,65 @@ namespace NetSuiteAccess.Models
 					Id = order.Entity.Id
 				};
 			}
+
+			return svOrder;
+		}
+
+		public static NetSuiteSalesOrder ToSVSalesOrder( this NetSuiteSoapWS.SalesOrder order )
+		{
+			var svOrder = new NetSuiteSalesOrder
+			{
+				Id = order.internalId,
+				DocNumber = order.tranId,
+				CreatedDateUtc = order.createdDate,
+				ModifiedDateUtc = order.lastModifiedDate,
+				Status = order.status,
+				Total = (decimal)order.total
+			};
+
+			svOrder.ShippingInfo = new NetSuiteShippingInfo()
+			{
+				Cost = (decimal)order.shippingCost
+			};
+
+			if ( order.shippingAddress != null )
+			{
+				svOrder.ShippingInfo.Address = new NetSuiteShippingAddress()
+				{
+					Line1 = order.shippingAddress.addr1,
+					City = order.shippingAddress.city,
+					PostalCode = order.shippingAddress.zip,
+					CountryCode = order.shippingAddress.country.ToString(),
+					State = order.shippingAddress.state
+				};
+			}
+
+			if ( order.shipMethod != null )
+			{
+				svOrder.ShippingInfo.Carrier = order.shipMethod.name;
+			}
+
+			var items = new List< NetSuiteSalesOrderItem >();
+			if ( order.itemList != null )
+			{
+				foreach( var itemInfo in order.itemList.item )
+				{
+					items.Add( new NetSuiteSalesOrderItem()
+					{
+						Quantity = (int)Math.Floor( itemInfo.quantity ),
+						Sku = itemInfo.item != null ? itemInfo.item.name : string.Empty,
+						UnitPrice = itemInfo.rate != null ? decimal.Parse( itemInfo.rate, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture ) : 0,
+						TaxRate = (decimal)itemInfo.taxRate1,
+						Tax = (decimal)itemInfo.taxAmount
+					} );
+				}
+			}
+			svOrder.Items = items.ToArray();
+
+			svOrder.Customer = new NetSuiteCustomer()
+			{
+				Id = int.Parse( order.entity.internalId )
+			};
 
 			return svOrder;
 		}

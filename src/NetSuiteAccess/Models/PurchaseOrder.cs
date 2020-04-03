@@ -1,6 +1,7 @@
 ﻿using NetSuiteAccess.Shared;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace NetSuiteAccess.Models
 {
@@ -107,7 +108,7 @@ namespace NetSuiteAccess.Models
 						 Quantity = (int)item.quantity,
 						 Sku = item.item.name,
 						 Title = item.description,
-						 UnitPrice = decimal.Parse( item.rate )
+						 UnitPrice = !string.IsNullOrWhiteSpace( item.rate ) ? decimal.Parse( item.rate, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture ) : 0
 					} );
 				}
 			}

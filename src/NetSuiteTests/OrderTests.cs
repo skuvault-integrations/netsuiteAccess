@@ -27,7 +27,7 @@ namespace NetSuiteTests
 		[ Test ]
 		public void GetModifiedSalesOrders()
 		{
-			var salesOrders = this._ordersService.GetSalesOrdersAsync( DateTime.UtcNow.AddMonths( -1 ), DateTime.UtcNow, CancellationToken.None ).Result;
+			var salesOrders = this._ordersService.GetSalesOrdersAsync( DateTime.UtcNow.AddMonths( -3 ), DateTime.UtcNow, CancellationToken.None ).Result;
 			salesOrders.Count().Should().BeGreaterThan( 0 );
 		}
 

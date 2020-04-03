@@ -1,4 +1,6 @@
-﻿using System.Threading;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using NetSuiteAccess.Configuration;
 using NetSuiteAccess.Models;
@@ -23,16 +25,30 @@ namespace NetSuiteAccess.Services.Customers
 			return customer?.ToSVCustomer();
 		}
 
+		public async Task< NetSuiteCustomer > GetCustomerInfoByIdAsync( string customerId, CancellationToken token )
+		{
+			var customers = await this.GetCustomersInfoByIdsAsync( new string[] { customerId }, token ).ConfigureAwait( false );
+
+			return customers?.FirstOrDefault();
+		}
+
 		/// <summary>
-		///	Get customer information by internal id.
+		///	Get customers by theirs ids
 		///	Requires Lists -> Customers role permission.
 		/// </summary>
 		/// <param name="customerId"></param>
 		/// <param name="token"></param>
 		/// <returns></returns>
-		public Task< NetSuiteCustomer > GetCustomerInfoByIdAsync( long customerId, CancellationToken token )
+		public async Task< IEnumerable< NetSuiteCustomer > > GetCustomersInfoByIdsAsync( string[] customersIds, CancellationToken token )
 		{
-			return base.GetAsync< NetSuiteCustomer >( new GetCustomerInfoCommand( base.Config, customerId ), token );
+			var customers = await _soapService.GetCustomersByIdsAsync( customersIds, token ).ConfigureAwait( false );
+
+			if ( customers != null && customers.Any() )
+			{
+				return customers.Select( c => c.ToSVCustomer() );
+			}
+			
+			return null;
 		}
 	}
 }

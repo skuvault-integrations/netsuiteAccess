@@ -341,6 +341,42 @@ namespace NetSuiteAccess.Services.Soap
 		}
 
 		/// <summary>
+		///	Find customer by internal id
+		/// </summary>
+		/// <param name="internalId"></param>
+		/// <param name="cancellationToken"></param>
+		/// <returns></returns>
+		public async Task< IEnumerable< Customer > > GetCustomersByIdsAsync( IEnumerable< string > customersIds, CancellationToken cancellationToken )
+		{
+			if ( customersIds == null || !customersIds.Any() )
+				return null;
+
+			var mark = Mark.CreateNew();
+
+			if ( cancellationToken.IsCancellationRequested )
+			{
+				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
+			}
+
+			var customerSearch = new CustomerSearch()
+			{
+				basic = new CustomerSearchBasic()
+				{
+					internalId = new SearchMultiSelectField()
+					{
+						 @operator = SearchMultiSelectFieldOperator.anyOf,
+						 operatorSpecified = true,
+						 searchValue = customersIds.Select( id => new RecordRef() { internalId = id } ).ToArray()
+					}
+				}
+			};
+
+			var response = await this.SearchRecords( customerSearch, mark, cancellationToken ).ConfigureAwait( false );
+			return response.OfType< Customer >();
+		}
+
+		/// <summary>
 		///	Find customer by email
 		/// </summary>
 		/// <param name="email"></param>
@@ -563,12 +599,87 @@ namespace NetSuiteAccess.Services.Soap
 			return response.OfType< NetSuiteSoapWS.PurchaseOrder >().Select( p => p.ToSVPurchaseOrder() );
 		}
 
+		public async Task< IEnumerable< NetSuitePurchaseOrder > > GetModifiedPurchaseOrdersAsync( DateTime startDateUtc, DateTime endDateUtc, CancellationToken cancellationToken )
+		{
+			var mark = Mark.CreateNew();
+
+			if ( cancellationToken.IsCancellationRequested )
+			{
+				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
+			}
+
+			var purchaseOrdersSearchRequest = new TransactionSearchBasic()
+			{
+				lastModifiedDate = new SearchDateField()
+				{
+						@operator = SearchDateFieldOperator.within,
+						operatorSpecified = true,
+						searchValue = startDateUtc,
+						searchValueSpecified = true,
+						searchValue2 = endDateUtc,
+						searchValue2Specified = true
+				},
+				recordType = new SearchStringField()
+				{
+					@operator = SearchStringFieldOperator.@is,
+					searchValue = "purchaseOrder",
+					operatorSpecified = true
+				},
+			};
+
+			var response = await this.SearchRecords( purchaseOrdersSearchRequest, mark, cancellationToken ).ConfigureAwait( false );
+			return response.OfType< NetSuiteSoapWS.PurchaseOrder >().Select( p => p.ToSVPurchaseOrder() );
+		}
+
+		/// <summary>
+		///	Get all modified sales orders
+		/// </summary>
+		/// <returns></returns>
+		public async Task< IEnumerable< NetSuiteSalesOrder > > GetModifiedSalesOrdersAsync( DateTime startDateUtc, DateTime endDateUtc, CancellationToken cancellationToken )
+		{
+			var mark = Mark.CreateNew();
+
+			if ( cancellationToken.IsCancellationRequested )
+			{
+				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
+			}
+
+			var searchModifiedSalesOrdersRequest = new TransactionSearchBasic()
+			{
+				lastModifiedDate = new SearchDateField()
+				{
+					 @operator = SearchDateFieldOperator.within,
+					 operatorSpecified = true,
+					 searchValue = startDateUtc,
+					 searchValueSpecified = true,
+					 searchValue2 = endDateUtc,
+					 searchValue2Specified = true
+				},
+				recordType = new SearchStringField()
+				{
+					@operator = SearchStringFieldOperator.@is,
+					searchValue = "salesOrder",
+					operatorSpecified = true
+				}
+			};
+
+			var response = await this.SearchRecords( searchModifiedSalesOrdersRequest, mark, cancellationToken ).ConfigureAwait( false );
+			return response.OfType< NetSuiteSoapWS.SalesOrder >().Select( p => p.ToSVSalesOrder() );
+		}
+
 		private async Task< IEnumerable< Record > > SearchRecords( SearchRecord searchRecord, Mark mark, CancellationToken cancellationToken )
 		{
 			var result = new List< Record >();
 			var response = await this.ThrottleRequestAsync( mark, ( token ) =>
 			{
-				return this._service.searchAsync( null, this._passport, null, null, null, searchRecord );
+				var searchPreferences = new SearchPreferences()
+				{
+					bodyFieldsOnly = false
+				};
+
+				return this._service.searchAsync( null, this._passport, null, null, searchPreferences, searchRecord );
 			}, searchRecord.ToJson(), cancellationToken ).ConfigureAwait( false );
 
 			var searchResult = response.searchResult;

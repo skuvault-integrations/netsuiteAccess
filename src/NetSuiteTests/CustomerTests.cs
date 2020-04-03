@@ -9,8 +9,8 @@ namespace NetSuiteTests
 	public class CustomerTests : BaseTest
 	{
 		private INetSuiteCustomersService _customersService;
-		private long _individualCustomerId = 1680;
-		private long _companyCustomerId = 1100;
+		private string _individualCustomerId = "1680";
+		private string _companyCustomerId = "1100";
 
 		[ SetUp ]
 		public void Init()
