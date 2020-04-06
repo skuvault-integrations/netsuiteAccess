@@ -9,11 +9,11 @@ using NetSuiteAccess.Services.Soap;
 
 namespace NetSuiteAccess.Services.Customers
 {
-	public class NetSuiteCustomersService : BaseService, INetSuiteCustomersService
+	public class NetSuiteCustomersService : INetSuiteCustomersService
 	{
 		private NetSuiteSoapService _soapService;
 
-		public NetSuiteCustomersService( NetSuiteConfig config ) : base( config )
+		public NetSuiteCustomersService( NetSuiteConfig config )
 		{
 			this._soapService = new NetSuiteSoapService( config );
 		}
@@ -33,7 +33,7 @@ namespace NetSuiteAccess.Services.Customers
 		}
 
 		/// <summary>
-		///	Get customers by theirs ids
+		///	Get customers by their ids
 		///	Requires Lists -> Customers role permission.
 		/// </summary>
 		/// <param name="customerId"></param>

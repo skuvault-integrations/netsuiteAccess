@@ -10,7 +10,7 @@ namespace NetSuiteAccess.Services.Orders
 	{
 		Task< IEnumerable< NetSuiteSalesOrder > > GetSalesOrdersAsync( DateTime startDateUtc, DateTime endDateUtc, CancellationToken token );
 		Task CreateSalesOrderAsync( NetSuiteSalesOrder order, string locationName, CancellationToken token );
-		Task UpdateSalesOrderAsync( NetSuiteSalesOrder order, string locationName, CancellationToken cancellationToken );
+		Task UpdateSalesOrderAsync( NetSuiteSalesOrder order, string locationName, CancellationToken token );
 		Task< IEnumerable< NetSuitePurchaseOrder > > GetPurchaseOrdersAsync( DateTime startDateUtc, DateTime endDateUtc, CancellationToken token );
 		Task< IEnumerable< NetSuitePurchaseOrder > > GetAllPurchaseOrdersAsync( CancellationToken token );
 		Task CreatePurchaseOrderAsync( NetSuitePurchaseOrder order, string locationName, CancellationToken token );

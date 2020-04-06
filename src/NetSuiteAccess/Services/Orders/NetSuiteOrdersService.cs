@@ -14,13 +14,13 @@ using NetSuiteAccess.Shared;
 
 namespace NetSuiteAccess.Services.Orders
 {
-	public sealed class NetSuiteOrdersService : BaseService, INetSuiteOrdersService
+	public sealed class NetSuiteOrdersService : INetSuiteOrdersService
 	{
 		private INetSuiteCustomersService _customersService;
 		private INetSuiteCommonService _commonService;
 		private NetSuiteSoapService _soapService;
 
-		public NetSuiteOrdersService( NetSuiteConfig config ) : base( config )
+		public NetSuiteOrdersService( NetSuiteConfig config )
 		{
 			this._customersService = new NetSuiteCustomersService( config );
 			this._commonService = new NetSuiteCommonService( config );
