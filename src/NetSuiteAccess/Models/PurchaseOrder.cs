@@ -9,6 +9,7 @@ namespace NetSuiteAccess.Models
 
 	public class NetSuitePurchaseOrder : NetSuiteOrder
 	{
+		public NetSuitePurchaseOrderStatus Status { get; set; }
 		public string SupplierName { get; set; }
 		public DateTime ShipDate { get; set; }
 		public NetSuitePurchaseOrderItem[] Items { get; set; }
@@ -23,6 +24,19 @@ namespace NetSuiteAccess.Models
 		public int Quantity { get; set; }
 	}
 
+	public enum NetSuitePurchaseOrderStatus
+	{
+		Unknown,
+		PendingReceipt,
+		PendingBill,
+		PartiallyReceived,
+		PendingBillingPartiallyReceived,
+		FullyBilled,
+		PendingSupervisorApproval,
+		RejectedBySupervisor,
+		Closed
+	}
+
 	public static class PurchaseOrderExtensions
 	{
 		public static NetSuitePurchaseOrder ToSVPurchaseOrder( this PurchaseOrder order )
@@ -33,7 +47,7 @@ namespace NetSuiteAccess.Models
 				DocNumber = order.TranId,
 				CreatedDateUtc = order.CreatedDate.FromRFC3339ToUtc(),
 				ModifiedDateUtc = order.LastModifiedDate.FromRFC3339ToUtc(),
-				Status = order.Status,
+				Status = GetPurchaseOrderStatus( order.Status ),
 				Total = order.Total,
 				ShipDate = order.ShipDate,
 				PrivateNote = order.Memo
@@ -84,9 +98,9 @@ namespace NetSuiteAccess.Models
 			{
 				Id = order.internalId,
 				DocNumber = order.tranId,
-				CreatedDateUtc = order.createdDate,
-				ModifiedDateUtc = order.lastModifiedDate,
-				Status = order.status,
+				CreatedDateUtc = order.createdDate.ToUniversalTime(),
+				ModifiedDateUtc = order.lastModifiedDate.ToUniversalTime(),
+				Status = GetPurchaseOrderStatus( order.status ),
 				Total = (decimal)order.total,
 				ShipDate = order.shipDate,
 				PrivateNote = order.memo
@@ -115,6 +129,52 @@ namespace NetSuiteAccess.Models
 			svPurchaseOrder.Items = items.ToArray();
 
 			return svPurchaseOrder;
+		}
+
+		private static NetSuitePurchaseOrderStatus GetPurchaseOrderStatus( string status )
+		{
+			if ( string.IsNullOrWhiteSpace( status ) )
+				return NetSuitePurchaseOrderStatus.Unknown;
+
+			switch( status )
+			{
+				case "Pending Receipt":
+					{
+						return NetSuitePurchaseOrderStatus.PendingReceipt;
+					}
+				case "Pending Bill":
+					{
+						return NetSuitePurchaseOrderStatus.PendingBill;
+					}
+				case "Partially Received":
+					{
+						return NetSuitePurchaseOrderStatus.PartiallyReceived;
+					}
+				case "Pending Billing/Partially Received":
+					{
+						return NetSuitePurchaseOrderStatus.PendingBillingPartiallyReceived;
+					}
+				case "Fully Billed":
+					{
+						return NetSuitePurchaseOrderStatus.FullyBilled;
+					}
+				case "Pending Supervisor Approval":
+					{
+						return NetSuitePurchaseOrderStatus.PendingSupervisorApproval;
+					}
+				case "Rejected By Supervisor":
+					{
+						return NetSuitePurchaseOrderStatus.RejectedBySupervisor;
+					}
+				case "Closed":
+					{
+						return NetSuitePurchaseOrderStatus.Closed;
+					}
+				default:
+					{
+						return NetSuitePurchaseOrderStatus.Unknown;
+					}
+			}
 		}
 	}
 }

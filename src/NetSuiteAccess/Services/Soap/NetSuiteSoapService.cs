@@ -758,7 +758,9 @@ namespace NetSuiteAccess.Services.Soap
 					{
 						item = new RecordRef() { internalId = item.internalId }, 
 						quantity = orderItem.Quantity,
-						quantitySpecified = true
+						quantitySpecified = true,
+						isClosed = order.Status == NetSuiteSalesOrderStatus.Closed ? true : false,
+						isClosedSpecified = true
 					} );
 				}
 			}
@@ -822,7 +824,9 @@ namespace NetSuiteAccess.Services.Soap
 					{
 						item = new RecordRef() { internalId = item.internalId }, 
 						quantity = orderItem.Quantity,
-						quantitySpecified = true
+						quantitySpecified = true,
+						isClosed = order.Status == NetSuiteSalesOrderStatus.Closed ? true : false,
+						isClosedSpecified = true
 					} );
 				}
 			}

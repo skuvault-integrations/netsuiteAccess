@@ -32,7 +32,6 @@ namespace NetSuiteAccess.Models
 		public string DocNumber { get; set; }
 		public DateTime CreatedDateUtc { get; set; }
 		public DateTime ModifiedDateUtc { get; set; }
-		public string Status { get; set; }
 		public NetSuitePaymentStatus PaymentStatus { get; set; }
 		public NetSuiteShippingInfo ShippingInfo { get; set; }
 		public decimal Total { get; set; }

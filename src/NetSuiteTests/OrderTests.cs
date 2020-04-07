@@ -175,7 +175,7 @@ namespace NetSuiteTests
 			await this._ordersService.UpdateSalesOrderAsync( createdOrder, _locationName, CancellationToken.None );
 
 			var updatedOrder = await this.GetRecentlyModifiedSalesOrderByDocNumber( docNumber );
-			updatedOrder.Items.First().Should().Be( newItemQuantity );
+			updatedOrder.Items.First().Quantity.Should().Be( newItemQuantity );
 		}
 
 		[ Test ]

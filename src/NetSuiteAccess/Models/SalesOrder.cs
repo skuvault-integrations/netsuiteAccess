@@ -16,6 +16,7 @@ namespace NetSuiteAccess.Models
 
 	public class NetSuiteSalesOrder : NetSuiteOrder
 	{
+		public NetSuiteSalesOrderStatus Status { get; set; }
 		public NetSuiteCustomer Customer { get; set; }
 		public NetSuiteSalesOrderItem[] Items { get; set; }
 	}
@@ -29,6 +30,19 @@ namespace NetSuiteAccess.Models
 		public decimal TaxRate { get; set; }
 	}
 
+	public enum NetSuiteSalesOrderStatus
+	{
+		Unknown,
+		PendingApproval,
+		PendingBilling,
+		PendingBillingPartFulfilled,
+		PartiallyFulfilled,
+		Billed,
+		PendingFulfillment,
+		Cancelled,
+		Closed
+	}
+
 	public static class OrderExtensions
 	{
 		public static NetSuiteSalesOrder ToSVSalesOrder( this SalesOrder order )
@@ -39,7 +53,7 @@ namespace NetSuiteAccess.Models
 				DocNumber = order.TranId,
 				CreatedDateUtc = order.CreatedDate.FromRFC3339ToUtc(),
 				ModifiedDateUtc = order.LastModifiedDate.FromRFC3339ToUtc(),
-				Status = order.Status,
+				Status = GetSalesOrderStatus( order.Status ),
 				Total = order.Total
 			};
 
@@ -100,9 +114,9 @@ namespace NetSuiteAccess.Models
 			{
 				Id = order.internalId,
 				DocNumber = order.tranId,
-				CreatedDateUtc = order.createdDate,
-				ModifiedDateUtc = order.lastModifiedDate,
-				Status = order.status,
+				CreatedDateUtc = order.createdDate.ToUniversalTime(),
+				ModifiedDateUtc = order.lastModifiedDate.ToUniversalTime(),
+				Status = GetSalesOrderStatus( order.status ),
 				Total = (decimal)order.total
 			};
 
@@ -151,6 +165,52 @@ namespace NetSuiteAccess.Models
 			};
 
 			return svOrder;
+		}
+
+		private static NetSuiteSalesOrderStatus GetSalesOrderStatus( string status )
+		{
+			if ( string.IsNullOrWhiteSpace( status ) )
+				return NetSuiteSalesOrderStatus.Unknown;
+
+			switch( status )
+			{
+				case "Pending Approval":
+					{
+						return NetSuiteSalesOrderStatus.PendingApproval;
+					}
+				case "Pending Billing":
+					{
+						return NetSuiteSalesOrderStatus.PendingBilling;
+					}
+				case "Pending BillingPart Fulfilled":
+					{
+						return NetSuiteSalesOrderStatus.PendingBillingPartFulfilled;
+					}
+				case "Partially Fulfilled":
+					{
+						return NetSuiteSalesOrderStatus.PartiallyFulfilled;
+					}
+				case "Billed":
+					{
+						return NetSuiteSalesOrderStatus.Billed;
+					}
+				case "Pending Fulfillment":
+					{
+						return NetSuiteSalesOrderStatus.PendingFulfillment;
+					}
+				case "Cancelled":
+					{
+						return NetSuiteSalesOrderStatus.Cancelled;
+					}
+				case "Closed":
+					{
+						return NetSuiteSalesOrderStatus.Closed;
+					}
+				default:
+					{
+						return NetSuiteSalesOrderStatus.Unknown;
+					}
+			}
 		}
 	}
 }
