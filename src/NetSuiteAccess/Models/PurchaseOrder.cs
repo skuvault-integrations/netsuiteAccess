@@ -39,6 +39,23 @@ namespace NetSuiteAccess.Models
 
 	public static class PurchaseOrderExtensions
 	{
+		public static Dictionary< string, NetSuitePurchaseOrderStatus > PurchaseOrderStatuses { get; private set; }
+
+		static PurchaseOrderExtensions()
+		{
+			PurchaseOrderStatuses = new Dictionary< string, NetSuitePurchaseOrderStatus >()
+			{
+				{ "Pending Receipt", NetSuitePurchaseOrderStatus.PendingReceipt },
+				{ "Pending Bill", NetSuitePurchaseOrderStatus.PendingBill },
+				{ "Partially Received", NetSuitePurchaseOrderStatus.PartiallyReceived },
+				{ "Pending Billing/Partially Received", NetSuitePurchaseOrderStatus.PendingBillingPartiallyReceived },
+				{ "Fully Billed", NetSuitePurchaseOrderStatus.FullyBilled },
+				{ "Pending Supervisor Approval", NetSuitePurchaseOrderStatus.PendingSupervisorApproval },
+				{ "Rejected By Supervisor", NetSuitePurchaseOrderStatus.RejectedBySupervisor },
+				{ "Closed", NetSuitePurchaseOrderStatus.Closed }
+			};
+		}
+
 		public static NetSuitePurchaseOrder ToSVPurchaseOrder( this PurchaseOrder order )
 		{
 			var svPurchaseOrder = new NetSuitePurchaseOrder()
@@ -136,45 +153,12 @@ namespace NetSuiteAccess.Models
 			if ( string.IsNullOrWhiteSpace( status ) )
 				return NetSuitePurchaseOrderStatus.Unknown;
 
-			switch( status )
+			if ( !PurchaseOrderStatuses.TryGetValue( status, out NetSuitePurchaseOrderStatus purchaseOrderStatus ) )
 			{
-				case "Pending Receipt":
-					{
-						return NetSuitePurchaseOrderStatus.PendingReceipt;
-					}
-				case "Pending Bill":
-					{
-						return NetSuitePurchaseOrderStatus.PendingBill;
-					}
-				case "Partially Received":
-					{
-						return NetSuitePurchaseOrderStatus.PartiallyReceived;
-					}
-				case "Pending Billing/Partially Received":
-					{
-						return NetSuitePurchaseOrderStatus.PendingBillingPartiallyReceived;
-					}
-				case "Fully Billed":
-					{
-						return NetSuitePurchaseOrderStatus.FullyBilled;
-					}
-				case "Pending Supervisor Approval":
-					{
-						return NetSuitePurchaseOrderStatus.PendingSupervisorApproval;
-					}
-				case "Rejected By Supervisor":
-					{
-						return NetSuitePurchaseOrderStatus.RejectedBySupervisor;
-					}
-				case "Closed":
-					{
-						return NetSuitePurchaseOrderStatus.Closed;
-					}
-				default:
-					{
-						return NetSuitePurchaseOrderStatus.Unknown;
-					}
+				return NetSuitePurchaseOrderStatus.Unknown;
 			}
+
+			return purchaseOrderStatus;
 		}
 	}
 }

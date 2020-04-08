@@ -45,6 +45,23 @@ namespace NetSuiteAccess.Models
 
 	public static class OrderExtensions
 	{
+		public static Dictionary< string, NetSuiteSalesOrderStatus > SalesOrderStatuses { get; private set; }
+
+		static OrderExtensions()
+		{
+			SalesOrderStatuses = new Dictionary< string, NetSuiteSalesOrderStatus >
+			{
+				{ "Pending Approval", NetSuiteSalesOrderStatus.PendingApproval },
+				{ "Pending Billing", NetSuiteSalesOrderStatus.PendingBilling },
+				{ "Pending BillingPart Fulfilled", NetSuiteSalesOrderStatus.PendingBillingPartFulfilled },
+				{ "Partially Fulfilled", NetSuiteSalesOrderStatus.PartiallyFulfilled },
+				{ "Billed", NetSuiteSalesOrderStatus.Billed },
+				{ "Pending Fulfillment", NetSuiteSalesOrderStatus.PendingFulfillment },
+				{ "Cancelled", NetSuiteSalesOrderStatus.Cancelled },
+				{ "Closed", NetSuiteSalesOrderStatus.Closed }
+			};
+		}
+
 		public static NetSuiteSalesOrder ToSVSalesOrder( this SalesOrder order )
 		{
 			var svOrder = new NetSuiteSalesOrder
@@ -130,6 +147,7 @@ namespace NetSuiteAccess.Models
 				svOrder.ShippingInfo.Address = new NetSuiteShippingAddress()
 				{
 					Line1 = order.shippingAddress.addr1,
+					Line2 = order.shippingAddress.addr2,
 					City = order.shippingAddress.city,
 					PostalCode = order.shippingAddress.zip,
 					CountryCode = order.shippingAddress.country.ToString(),
@@ -172,45 +190,12 @@ namespace NetSuiteAccess.Models
 			if ( string.IsNullOrWhiteSpace( status ) )
 				return NetSuiteSalesOrderStatus.Unknown;
 
-			switch( status )
+			if ( !SalesOrderStatuses.TryGetValue( status, out NetSuiteSalesOrderStatus salesOrderStatus ) )
 			{
-				case "Pending Approval":
-					{
-						return NetSuiteSalesOrderStatus.PendingApproval;
-					}
-				case "Pending Billing":
-					{
-						return NetSuiteSalesOrderStatus.PendingBilling;
-					}
-				case "Pending BillingPart Fulfilled":
-					{
-						return NetSuiteSalesOrderStatus.PendingBillingPartFulfilled;
-					}
-				case "Partially Fulfilled":
-					{
-						return NetSuiteSalesOrderStatus.PartiallyFulfilled;
-					}
-				case "Billed":
-					{
-						return NetSuiteSalesOrderStatus.Billed;
-					}
-				case "Pending Fulfillment":
-					{
-						return NetSuiteSalesOrderStatus.PendingFulfillment;
-					}
-				case "Cancelled":
-					{
-						return NetSuiteSalesOrderStatus.Cancelled;
-					}
-				case "Closed":
-					{
-						return NetSuiteSalesOrderStatus.Closed;
-					}
-				default:
-					{
-						return NetSuiteSalesOrderStatus.Unknown;
-					}
+				return NetSuiteSalesOrderStatus.Unknown;
 			}
+
+			return salesOrderStatus;
 		}
 	}
 }
