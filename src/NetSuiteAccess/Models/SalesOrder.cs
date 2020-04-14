@@ -169,7 +169,7 @@ namespace NetSuiteAccess.Models
 					{
 						Quantity = (int)Math.Floor( itemInfo.quantity ),
 						Sku = itemInfo.item != null ? itemInfo.item.name : string.Empty,
-						UnitPrice = (decimal) ( itemInfo.amountSpecified ? Math.Round( itemInfo.amount / itemInfo.quantity, 2 ) : 0 ),
+						UnitPrice = GetOrderLineItemUnitPrice( itemInfo ),
 						TaxRate = (decimal)itemInfo.taxRate1,
 						Tax = (decimal)itemInfo.taxAmount
 					} );
@@ -183,6 +183,18 @@ namespace NetSuiteAccess.Models
 			};
 
 			return svOrder;
+		}
+
+		private static decimal GetOrderLineItemUnitPrice( NetSuiteSoapWS.SalesOrderItem saleOrderItem )
+		{
+			decimal unitPrice = 0;
+
+			if ( saleOrderItem.amountSpecified && saleOrderItem.quantity > 0 )
+			{
+				unitPrice = (decimal)Math.Round( saleOrderItem.amount / saleOrderItem.quantity, 2 );
+			}
+
+			return unitPrice;
 		}
 
 		private static NetSuiteSalesOrderStatus GetSalesOrderStatus( string status )
