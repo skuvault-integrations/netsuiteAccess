@@ -169,7 +169,7 @@ namespace NetSuiteAccess.Models
 					{
 						Quantity = (int)Math.Floor( itemInfo.quantity ),
 						Sku = itemInfo.item != null ? itemInfo.item.name : string.Empty,
-						UnitPrice = itemInfo.rate != null ? decimal.Parse( itemInfo.rate, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture ) : 0,
+						UnitPrice = (decimal) ( itemInfo.amountSpecified ? Math.Round( itemInfo.amount / itemInfo.quantity, 2 ) : 0 ),
 						TaxRate = (decimal)itemInfo.taxRate1,
 						Tax = (decimal)itemInfo.taxAmount
 					} );

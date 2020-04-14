@@ -760,7 +760,9 @@ namespace NetSuiteAccess.Services.Soap
 						quantity = orderItem.Quantity,
 						quantitySpecified = true,
 						isClosed = order.Status == NetSuiteSalesOrderStatus.Closed ? true : false,
-						isClosedSpecified = true
+						isClosedSpecified = true, 
+						amount = (double)orderItem.UnitPrice * orderItem.Quantity,
+						amountSpecified = true
 					} );
 				}
 			}
@@ -826,7 +828,9 @@ namespace NetSuiteAccess.Services.Soap
 						quantity = orderItem.Quantity,
 						quantitySpecified = true,
 						isClosed = order.Status == NetSuiteSalesOrderStatus.Closed ? true : false,
-						isClosedSpecified = true
+						isClosedSpecified = true,
+						amount = (double)orderItem.UnitPrice * orderItem.Quantity,
+						amountSpecified = true
 					} );
 				}
 			}

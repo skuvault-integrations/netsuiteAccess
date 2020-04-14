@@ -206,7 +206,8 @@ namespace NetSuiteTests
 					 new NetSuiteSalesOrderItem()
 					 {
 						Sku = _testSkus[ 3 ],
-						Quantity = 12
+						Quantity = 12,
+						UnitPrice = 5
 					 }
 				 }
 			};
