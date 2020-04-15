@@ -16,6 +16,7 @@ namespace NetSuiteAccess.Models
 
 	public class NetSuiteSalesOrder : NetSuiteOrder
 	{
+		public NetSuiteSalesOrderSource Source { get; set; }
 		public NetSuiteSalesOrderStatus Status { get; set; }
 		public NetSuiteCustomer Customer { get; set; }
 		public NetSuiteSalesOrderItem[] Items { get; set; }
@@ -41,6 +42,12 @@ namespace NetSuiteAccess.Models
 		PendingFulfillment,
 		Cancelled,
 		Closed
+	}
+
+	public enum NetSuiteSalesOrderSource
+	{
+		NetSuite,
+		External
 	}
 
 	public static class OrderExtensions
@@ -136,6 +143,12 @@ namespace NetSuiteAccess.Models
 				Status = GetSalesOrderStatus( order.status ),
 				Total = (decimal)order.total
 			};
+
+			if ( !string.IsNullOrWhiteSpace( order.source ) 
+					&& order.source.Equals( "Web Services" ) )
+			{
+				svOrder.Source = NetSuiteSalesOrderSource.External;
+			}
 
 			svOrder.ShippingInfo = new NetSuiteShippingInfo()
 			{
