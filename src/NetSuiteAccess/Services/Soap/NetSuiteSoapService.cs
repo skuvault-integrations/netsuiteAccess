@@ -300,7 +300,40 @@ namespace NetSuiteAccess.Services.Soap
 
 			var locationsSearch = new LocationSearch();
 			var response = await this.SearchRecords( locationsSearch, mark, cancellationToken ).ConfigureAwait( false );
-			return response.OfType< Location >().Select( l => new NetSuiteLocation() { Id = int.Parse( l.internalId ), Name = l.name } );
+			return response.OfType< Location >().Select( l => l.ToSVLocation() );
+		}
+
+		/// <summary>
+		///	Get location info by name
+		/// </summary>
+		/// <param name="locationName"></param>
+		/// <param name="cancellationToken"></param>
+		/// <returns></returns>
+		public async Task< NetSuiteLocation > GetLocationByNameAsync( string locationName, CancellationToken cancellationToken )
+		{
+			var mark = Mark.CreateNew();
+
+			if ( cancellationToken.IsCancellationRequested )
+			{
+				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
+			}
+
+			var locationsSearch = new LocationSearch()
+			{
+				basic = new LocationSearchBasic()
+				{
+					name = new SearchStringField()
+					{
+						searchValue = locationName,
+						operatorSpecified = true,
+						@operator = SearchStringFieldOperator.@is
+					}
+				}
+			};
+
+			var response = await this.SearchRecords( locationsSearch, mark, cancellationToken ).ConfigureAwait( false );
+			return response.OfType< Location >().Select( l => l.ToSVLocation() ).FirstOrDefault();
 		}
 
 		/// <summary>

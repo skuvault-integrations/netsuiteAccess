@@ -36,10 +36,24 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
-		public async Task UpdateSkuQuantityWithBinFeatureEnabled()
+		public async Task UpdateSkuQuantityWithBinFeatureEnabledOnlyOnItemLevel()
 		{
-			int newQuantity = 100;
-			string testsku = "NS-testsku6";
+			int newQuantity = new Random().Next( 1, 100 );
+			string testsku = "NS-testsku555";
+
+			int currentQuantity = await this._itemsService.GetSkuQuantity( testsku, warehouse, CancellationToken.None );
+			await this._itemsService.UpdateItemQuantityBySkuAsync( accountId, warehouse, testsku, newQuantity, CancellationToken.None );
+
+			int updatedQuantity = await this._itemsService.GetSkuQuantity( testsku, warehouse, CancellationToken.None );
+			updatedQuantity.Should().Be( newQuantity );
+		}
+
+		[ Test ]
+		public async Task UpdateSkuQuantityWithBinFeatureEnabledOnLocationAndItemLevels()
+		{
+			int newQuantity = new Random().Next( 1, 100 );
+			string testsku = "NS-testsku555";
+			string warehouse = "Los Angeles";
 
 			int currentQuantity = await this._itemsService.GetSkuQuantity( testsku, warehouse, CancellationToken.None );
 			await this._itemsService.UpdateItemQuantityBySkuAsync( accountId, warehouse, testsku, newQuantity, CancellationToken.None );

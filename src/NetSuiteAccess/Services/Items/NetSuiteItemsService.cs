@@ -1,5 +1,6 @@
 ﻿using CuttingEdge.Conditions;
 using NetSuiteAccess.Configuration;
+using NetSuiteAccess.Exceptions;
 using NetSuiteAccess.Models;
 using NetSuiteAccess.Services.Soap;
 using NetSuiteSoapWS;
@@ -80,6 +81,13 @@ namespace NetSuiteAccess.Services.Items
 			if ( string.IsNullOrWhiteSpace( warehouseName ) )
 				return;
 
+			var warehouseInfo = await this._service.GetLocationByNameAsync( warehouseName, token ).ConfigureAwait( false );
+
+			if ( warehouseInfo == null )
+			{
+				throw new NetSuiteException( string.Format( "Warehouse {0} was not found! Inventory sync failed", warehouseName ) );
+			}
+
 			var inventoryAdjustment = new List< InventoryAdjustmentInventory >();
 
 			foreach( var skuQuantity in skuQuantities )
@@ -89,8 +97,8 @@ namespace NetSuiteAccess.Services.Items
 				if ( item == null )
 					continue;
 
-				// otherwise we have to specify bin in the location
-				if ( item.useBins )
+				// bins feature enabled both for location and item
+				if ( warehouseInfo.UseBins && item.useBins )
 					continue;
 
 				// we can't specify quantity for parent items

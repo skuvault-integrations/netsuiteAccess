@@ -73,6 +73,7 @@
     <Compile Include="CustomerTests.cs" />
     <Compile Include="ItemMapperTests.cs" />
     <Compile Include="ItemTests.cs" />
+    <Compile Include="LocationMapperTests.cs" />
     <Compile Include="OrderMapperTests.cs" />
     <Compile Include="OrderTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
