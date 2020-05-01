@@ -1,4 +1,5 @@
 ﻿using NetSuiteAccess.Models;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -6,6 +7,8 @@ namespace NetSuiteAccess.Services.Customers
 {
 	public interface INetSuiteCustomersService
 	{
-		Task< NetSuiteCustomer > GetCustomerInfoByIdAsync( long customerId, CancellationToken token );
+		Task< IEnumerable< NetSuiteCustomer > > GetCustomersInfoByIdsAsync( string[] customersIds, CancellationToken token );
+		Task< NetSuiteCustomer > GetCustomerInfoByIdAsync( string customerId, CancellationToken token );
+		Task< NetSuiteCustomer > GetCustomerInfoByEmailAsync( string email, CancellationToken token );
 	}
 }

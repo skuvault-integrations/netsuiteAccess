@@ -1,6 +1,7 @@
 ﻿using NetSuiteAccess.Shared;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace NetSuiteAccess.Models
 {
@@ -8,6 +9,7 @@ namespace NetSuiteAccess.Models
 
 	public class NetSuitePurchaseOrder : NetSuiteOrder
 	{
+		public NetSuitePurchaseOrderStatus Status { get; set; }
 		public string SupplierName { get; set; }
 		public DateTime ShipDate { get; set; }
 		public NetSuitePurchaseOrderItem[] Items { get; set; }
@@ -22,8 +24,38 @@ namespace NetSuiteAccess.Models
 		public int Quantity { get; set; }
 	}
 
+	public enum NetSuitePurchaseOrderStatus
+	{
+		Unknown,
+		PendingReceipt,
+		PendingBill,
+		PartiallyReceived,
+		PendingBillingPartiallyReceived,
+		FullyBilled,
+		PendingSupervisorApproval,
+		RejectedBySupervisor,
+		Closed
+	}
+
 	public static class PurchaseOrderExtensions
 	{
+		public static Dictionary< string, NetSuitePurchaseOrderStatus > PurchaseOrderStatuses { get; private set; }
+
+		static PurchaseOrderExtensions()
+		{
+			PurchaseOrderStatuses = new Dictionary< string, NetSuitePurchaseOrderStatus >()
+			{
+				{ "Pending Receipt", NetSuitePurchaseOrderStatus.PendingReceipt },
+				{ "Pending Bill", NetSuitePurchaseOrderStatus.PendingBill },
+				{ "Partially Received", NetSuitePurchaseOrderStatus.PartiallyReceived },
+				{ "Pending Billing/Partially Received", NetSuitePurchaseOrderStatus.PendingBillingPartiallyReceived },
+				{ "Fully Billed", NetSuitePurchaseOrderStatus.FullyBilled },
+				{ "Pending Supervisor Approval", NetSuitePurchaseOrderStatus.PendingSupervisorApproval },
+				{ "Rejected By Supervisor", NetSuitePurchaseOrderStatus.RejectedBySupervisor },
+				{ "Closed", NetSuitePurchaseOrderStatus.Closed }
+			};
+		}
+
 		public static NetSuitePurchaseOrder ToSVPurchaseOrder( this PurchaseOrder order )
 		{
 			var svPurchaseOrder = new NetSuitePurchaseOrder()
@@ -32,7 +64,7 @@ namespace NetSuiteAccess.Models
 				DocNumber = order.TranId,
 				CreatedDateUtc = order.CreatedDate.FromRFC3339ToUtc(),
 				ModifiedDateUtc = order.LastModifiedDate.FromRFC3339ToUtc(),
-				Status = order.Status,
+				Status = GetPurchaseOrderStatus( order.Status ),
 				Total = order.Total,
 				ShipDate = order.ShipDate,
 				PrivateNote = order.Memo
@@ -83,9 +115,9 @@ namespace NetSuiteAccess.Models
 			{
 				Id = order.internalId,
 				DocNumber = order.tranId,
-				CreatedDateUtc = order.createdDate,
-				ModifiedDateUtc = order.lastModifiedDate,
-				Status = order.status,
+				CreatedDateUtc = order.createdDate.ToUniversalTime(),
+				ModifiedDateUtc = order.lastModifiedDate.ToUniversalTime(),
+				Status = GetPurchaseOrderStatus( order.status ),
 				Total = (decimal)order.total,
 				ShipDate = order.shipDate,
 				PrivateNote = order.memo
@@ -107,13 +139,26 @@ namespace NetSuiteAccess.Models
 						 Quantity = (int)item.quantity,
 						 Sku = item.item.name,
 						 Title = item.description,
-						 UnitPrice = decimal.Parse( item.rate )
+						 UnitPrice = !string.IsNullOrWhiteSpace( item.rate ) ? decimal.Parse( item.rate, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture ) : 0
 					} );
 				}
 			}
 			svPurchaseOrder.Items = items.ToArray();
 
 			return svPurchaseOrder;
+		}
+
+		private static NetSuitePurchaseOrderStatus GetPurchaseOrderStatus( string status )
+		{
+			if ( string.IsNullOrWhiteSpace( status ) )
+				return NetSuitePurchaseOrderStatus.Unknown;
+
+			if ( !PurchaseOrderStatuses.TryGetValue( status, out NetSuitePurchaseOrderStatus purchaseOrderStatus ) )
+			{
+				return NetSuitePurchaseOrderStatus.Unknown;
+			}
+
+			return purchaseOrderStatus;
 		}
 	}
 }

@@ -4,15 +4,15 @@
     <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
     <Authors>SkuVault</Authors>
     <Company>SkuVault</Company>
-    <Description>NetSuite REST API wrapper</Description>
-    <Copyright>SkuVault © 2019</Copyright>
+    <Description>NetSuite API wrapper</Description>
+    <Copyright>SkuVault © 2020</Copyright>
     <PackageLicenseUrl>https://github.com/skuvault/netsuiteAccess/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/skuvault/netsuiteAccess</PackageProjectUrl>
     <RepositoryUrl>https://github.com/skuvault/netsuiteAccess</RepositoryUrl>
-    <Version>1.0.1.0</Version>
+    <Version>1.2.5.0</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>1.0.1.0</AssemblyVersion>
-    <FileVersion>1.0.1.0</FileVersion>
+    <AssemblyVersion>1.2.5.0</AssemblyVersion>
+    <FileVersion>1.2.5.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

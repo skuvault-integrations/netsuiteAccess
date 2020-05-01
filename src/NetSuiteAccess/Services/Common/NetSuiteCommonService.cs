@@ -8,11 +8,11 @@ using NetSuiteAccess.Services.Soap;
 
 namespace NetSuiteAccess.Services.Common
 {
-	public class NetSuiteCommonService : BaseService, INetSuiteCommonService
+	public class NetSuiteCommonService : INetSuiteCommonService
 	{
 		private NetSuiteSoapService _soapService;
 
-		public NetSuiteCommonService( NetSuiteConfig config ) : base( config )
+		public NetSuiteCommonService( NetSuiteConfig config )
 		{
 			_soapService = new NetSuiteSoapService( config );
 		}
