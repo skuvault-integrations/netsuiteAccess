@@ -26,6 +26,14 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		public async Task GetLocationsByNameAsync()
+		{
+			var locationName = "San Francisco";
+			var location = await this._commonService.GetLocationByNameAsync( locationName, CancellationToken.None );
+			location.Should().NotBeNull();
+		}
+
+		[ Test ]
 		public async Task GetAccountsAsync()
 		{
 			var accounts = await this._commonService.GetAccountsAsync( CancellationToken.None );

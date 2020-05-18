@@ -9,5 +9,6 @@ namespace NetSuiteAccess.Services.Common
 	{
 		Task< IEnumerable< NetSuiteLocation > > GetLocationsAsync( CancellationToken token );
 		Task< IEnumerable< NetSuiteAccount > > GetAccountsAsync( CancellationToken token );
+		Task< NetSuiteLocation > GetLocationByNameAsync( string locationName, CancellationToken token );
 	}
 }
