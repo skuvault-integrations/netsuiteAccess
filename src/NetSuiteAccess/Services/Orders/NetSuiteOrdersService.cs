@@ -6,11 +6,10 @@ using System.Threading.Tasks;
 using NetSuiteAccess.Configuration;
 using NetSuiteAccess.Exceptions;
 using NetSuiteAccess.Models;
-using NetSuiteAccess.Models.Commands;
 using NetSuiteAccess.Services.Common;
 using NetSuiteAccess.Services.Customers;
 using NetSuiteAccess.Services.Soap;
-using NetSuiteAccess.Shared;
+using NetSuiteAccess.Shared.Logging;
 
 namespace NetSuiteAccess.Services.Orders
 {

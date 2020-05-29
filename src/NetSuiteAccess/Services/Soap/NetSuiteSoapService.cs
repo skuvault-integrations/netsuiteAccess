@@ -3,6 +3,7 @@ using NetSuiteAccess.Configuration;
 using NetSuiteAccess.Exceptions;
 using NetSuiteAccess.Models;
 using NetSuiteAccess.Shared;
+using NetSuiteAccess.Shared.Logging;
 using NetSuiteAccess.Throttling;
 using NetSuiteSoapWS;
 using System;
@@ -92,7 +93,7 @@ namespace NetSuiteAccess.Services.Soap
 
 			if ( cancellationToken.IsCancellationRequested )
 			{
-				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				var exceptionDetails = CallInfo.CreateInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
 				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
 			}
 
@@ -126,7 +127,7 @@ namespace NetSuiteAccess.Services.Soap
 
 			if ( cancellationToken.IsCancellationRequested )
 			{
-				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				var exceptionDetails = CallInfo.CreateInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
 				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
 			}
 
@@ -162,7 +163,7 @@ namespace NetSuiteAccess.Services.Soap
 
 			if ( cancellationToken.IsCancellationRequested )
 			{
-				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				var exceptionDetails = CallInfo.CreateInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
 				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
 			}
 
@@ -198,7 +199,7 @@ namespace NetSuiteAccess.Services.Soap
 
 			if ( cancellationToken.IsCancellationRequested )
 			{
-				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				var exceptionDetails = CallInfo.CreateInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
 				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
 			}
 
@@ -234,7 +235,7 @@ namespace NetSuiteAccess.Services.Soap
 
 			if ( cancellationToken.IsCancellationRequested )
 			{
-				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				var exceptionDetails = CallInfo.CreateInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
 				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
 			}
 
@@ -273,7 +274,7 @@ namespace NetSuiteAccess.Services.Soap
 
 			if ( cancellationToken.IsCancellationRequested )
 			{
-				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				var exceptionDetails = CallInfo.CreateInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
 				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
 			}
 
@@ -294,7 +295,7 @@ namespace NetSuiteAccess.Services.Soap
 
 			if ( cancellationToken.IsCancellationRequested )
 			{
-				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				var exceptionDetails = CallInfo.CreateInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
 				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
 			}
 
@@ -315,7 +316,7 @@ namespace NetSuiteAccess.Services.Soap
 
 			if ( cancellationToken.IsCancellationRequested )
 			{
-				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				var exceptionDetails = CallInfo.CreateInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
 				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
 			}
 
@@ -352,7 +353,7 @@ namespace NetSuiteAccess.Services.Soap
 
 			if ( cancellationToken.IsCancellationRequested )
 			{
-				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				var exceptionDetails = CallInfo.CreateInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
 				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
 			}
 
@@ -388,7 +389,7 @@ namespace NetSuiteAccess.Services.Soap
 
 			if ( cancellationToken.IsCancellationRequested )
 			{
-				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				var exceptionDetails = CallInfo.CreateInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
 				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
 			}
 
@@ -424,7 +425,7 @@ namespace NetSuiteAccess.Services.Soap
 
 			if ( cancellationToken.IsCancellationRequested )
 			{
-				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				var exceptionDetails = CallInfo.CreateInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
 				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
 			}
 
@@ -459,7 +460,7 @@ namespace NetSuiteAccess.Services.Soap
 
 			if ( cancellationToken.IsCancellationRequested )
 			{
-				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				var exceptionDetails = CallInfo.CreateInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
 				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
 			}
 
@@ -537,7 +538,7 @@ namespace NetSuiteAccess.Services.Soap
 
 			if ( cancellationToken.IsCancellationRequested )
 			{
-				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				var exceptionDetails = CallInfo.CreateInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
 				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
 			}
 
@@ -614,7 +615,7 @@ namespace NetSuiteAccess.Services.Soap
 
 			if ( cancellationToken.IsCancellationRequested )
 			{
-				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				var exceptionDetails = CallInfo.CreateInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
 				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
 			}
 
@@ -638,7 +639,7 @@ namespace NetSuiteAccess.Services.Soap
 
 			if ( cancellationToken.IsCancellationRequested )
 			{
-				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				var exceptionDetails = CallInfo.CreateInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
 				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
 			}
 
@@ -675,7 +676,7 @@ namespace NetSuiteAccess.Services.Soap
 
 			if ( cancellationToken.IsCancellationRequested )
 			{
-				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				var exceptionDetails = CallInfo.CreateInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
 				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
 			}
 
@@ -763,7 +764,7 @@ namespace NetSuiteAccess.Services.Soap
 
 			if ( cancellationToken.IsCancellationRequested )
 			{
-				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				var exceptionDetails = CallInfo.CreateInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
 				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
 			}
 
@@ -831,7 +832,7 @@ namespace NetSuiteAccess.Services.Soap
 
 			if ( cancellationToken.IsCancellationRequested )
 			{
-				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
+				var exceptionDetails = CallInfo.CreateInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
 				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
 			}
 
@@ -887,7 +888,7 @@ namespace NetSuiteAccess.Services.Soap
 			}
 		}
 
-		private Task< T > ThrottleRequestAsync< T >( Mark mark, Func< CancellationToken, Task< T > > processor, string payload, CancellationToken token )
+		private Task< T > ThrottleRequestAsync< T >( Mark mark, Func< CancellationToken, Task< T > > processor, string payload, CancellationToken token, [ CallerMemberName ] string libMethodName = null )
 		{
 			return this._throttler.ExecuteAsync( () =>
 			{
@@ -898,39 +899,24 @@ namespace NetSuiteAccess.Services.Soap
 
 						using( var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource( token ) )
 						{
-							NetSuiteLogger.LogStarted( this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo(), payload: payload ) );
+							NetSuiteLogger.LogStarted( CallInfo.CreateInfo( mark: mark, additionalInfo: this.AdditionalLogInfo(), payload: payload, libMethodName: libMethodName ) );
 							linkedTokenSource.CancelAfter( this._config.NetworkOptions.RequestTimeoutMs );
 
 							var result = await processor( linkedTokenSource.Token ).ConfigureAwait( false );
 
-							NetSuiteLogger.LogEnd( this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo(), result: result.ToJson() ) );
+							NetSuiteLogger.LogEnd( CallInfo.CreateInfo( mark: mark, additionalInfo: this.AdditionalLogInfo(), responseBodyRaw: result.ToJson(), libMethodName: libMethodName ) );
 
 							return result;
 						}
 					}, 
 					( exception, timeSpan, retryCount ) =>
 					{
-						string retryDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo(), errors: exception.Message );
+						string retryDetails = CallInfo.CreateInfo( mark: mark, additionalInfo: this.AdditionalLogInfo(), errors: exception.Message, libMethodName: libMethodName );
 						NetSuiteLogger.LogTraceRetryStarted( timeSpan.Seconds, retryCount, retryDetails );
 					},
-					() => CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() ),
+					() => CallInfo.CreateInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() ),
 					NetSuiteLogger.LogTraceException );
 			} );
-		}
-
-		private string CreateMethodCallInfo( Mark mark = null, string errors = "", string result = "", string additionalInfo = "", string payload = "", [ CallerMemberName ] string memberName = "" )
-		{
-			var str = string.Format(
-				"{{MethodName: {0}, Mark: '{1}', ServiceEndPoint: '{2}', {3} {4}{5}{6}}}",
-				memberName,
-				mark ?? Mark.Blank(),
-				this._service.Endpoint.Address.Uri,
-				string.IsNullOrWhiteSpace( errors ) ? string.Empty : ", Errors:" + errors,
-				string.IsNullOrWhiteSpace( result ) ? string.Empty : ", Result:" + result,
-				string.IsNullOrWhiteSpace( additionalInfo ) ? string.Empty : ", " + additionalInfo,
-				string.IsNullOrWhiteSpace( payload ) ? string.Empty : ", Payload:" + payload
-			);
-			return str;
 		}
 
 		private TokenPassport CreateTokenPassport()
