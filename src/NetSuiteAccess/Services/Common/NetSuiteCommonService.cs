@@ -32,5 +32,10 @@ namespace NetSuiteAccess.Services.Common
 		{
 			return _soapService.ListLocationsAsync( token );
 		}
+
+		public Task< NetSuiteLocation > GetLocationByNameAsync( string locationName, CancellationToken token )
+		{
+			return _soapService.GetLocationByNameAsync( locationName, token );
+		}
 	}
 }

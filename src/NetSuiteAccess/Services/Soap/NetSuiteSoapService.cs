@@ -328,13 +328,14 @@ namespace NetSuiteAccess.Services.Soap
 					{
 						searchValue = locationName,
 						operatorSpecified = true,
-						@operator = SearchStringFieldOperator.@is
+						@operator = SearchStringFieldOperator.contains
 					}
 				}
 			};
 
 			var response = await this.SearchRecords( locationsSearch, mark, cancellationToken ).ConfigureAwait( false );
-			return response.OfType< Location >().Select( l => l.ToSVLocation() ).FirstOrDefault();
+			return response.OfType< Location >().Where( l => l.name.Equals( locationName ) )
+									.Select( l => l.ToSVLocation() ).FirstOrDefault();
 		}
 
 		/// <summary>
