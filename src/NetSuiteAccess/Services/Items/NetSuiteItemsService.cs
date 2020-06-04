@@ -110,7 +110,7 @@ namespace NetSuiteAccess.Services.Items
 				if ( itemInventory == null )
 					continue;
 
-				var warehouseInventory = itemInventory.Where( i => i.locationId.name.ToLower().Equals( warehouseName.ToLower() ) ).FirstOrDefault();
+				var warehouseInventory = itemInventory.Where( i => i.locationId.internalId.Equals( warehouseInfo.Id.ToString() ) ).FirstOrDefault();
 
 				if ( warehouseInventory == null )
 					continue;
