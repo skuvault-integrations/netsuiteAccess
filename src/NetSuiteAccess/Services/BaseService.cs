@@ -4,6 +4,7 @@ using NetSuiteAccess.Exceptions;
 using NetSuiteAccess.Models;
 using NetSuiteAccess.Models.Commands;
 using NetSuiteAccess.Shared;
+using NetSuiteAccess.Shared.Logging;
 using NetSuiteAccess.Throttling;
 using Newtonsoft.Json;
 using System;
@@ -65,14 +66,14 @@ namespace NetSuiteAccess.Services
 			return entitiesIds;
 		}
 
-		protected async Task< T > GetAsync< T >( NetSuiteCommand command, CancellationToken cancellationToken, Mark mark = null )
+		protected async Task< T > GetAsync< T >( NetSuiteCommand command, CancellationToken cancellationToken, Mark mark = null, [ CallerMemberName ] string methodName = "" )
 		{
 			if ( mark == null )
 				mark = Mark.CreateNew();
 
 			if ( cancellationToken.IsCancellationRequested )
 			{
-				var exceptionDetails = this.CreateMethodCallInfo( command.Url, mark, additionalInfo: this.AdditionalLogInfo() );
+				var exceptionDetails = CallInfo.CreateInfo( command.Url, mark, additionalInfo: this.AdditionalLogInfo(), libMethodName: methodName, methodType: HttpMethod.Get );
 				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
 			}
 
@@ -138,51 +139,24 @@ namespace NetSuiteAccess.Services
 
 						using( var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource( token ) )
 						{
-							NetSuiteLogger.LogStarted( this.CreateMethodCallInfo( command.AbsoluteUrl, mark, payload: command.Payload, additionalInfo: this.AdditionalLogInfo() ) );
+							NetSuiteLogger.LogStarted( CallInfo.CreateInfo( command.AbsoluteUrl, mark, payload: command.Payload, additionalInfo: this.AdditionalLogInfo() ) );
 							linkedTokenSource.CancelAfter( Config.NetworkOptions.RequestTimeoutMs );
 
 							var result = await processor( linkedTokenSource.Token ).ConfigureAwait( false );
 
-							NetSuiteLogger.LogEnd( this.CreateMethodCallInfo( command.AbsoluteUrl, mark, methodResult: result.ToJson(), additionalInfo: this.AdditionalLogInfo() ) );
+							NetSuiteLogger.LogEnd( CallInfo.CreateInfo( command.AbsoluteUrl, mark, responseBodyRaw: result.ToJson(), additionalInfo: this.AdditionalLogInfo() ) );
 
 							return result;
 						}
 					}, 
 					( exception, timeSpan, retryCount ) =>
 					{
-						string retryDetails = this.CreateMethodCallInfo( command.AbsoluteUrl, mark, additionalInfo: this.AdditionalLogInfo() );
+						string retryDetails = CallInfo.CreateInfo( command.AbsoluteUrl, mark, additionalInfo: this.AdditionalLogInfo() );
 						NetSuiteLogger.LogTraceRetryStarted( timeSpan.Seconds, retryCount, retryDetails );
 					},
-					() => CreateMethodCallInfo( command.Url, mark, additionalInfo: this.AdditionalLogInfo() ),
+					() => CallInfo.CreateInfo( command.Url, mark, additionalInfo: this.AdditionalLogInfo() ),
 					NetSuiteLogger.LogTraceException );
 			} );
-		}
-
-		private string CreateMethodCallInfo( string url = "", Mark mark = null, string errors = "", string methodResult = "", string additionalInfo = "", string payload = "", [ CallerMemberName ] string memberName = "" )
-		{
-			string serviceEndPoint = null;
-			string requestParameters = null;
-
-			if ( !string.IsNullOrEmpty( url ) )
-			{
-				Uri uri = new Uri( url );
-
-				serviceEndPoint = uri.LocalPath;
-				requestParameters = uri.Query;
-			}
-
-			var str = string.Format(
-				"{{MethodName: {0}, Mark: '{1}', ServiceEndPoint: '{2}', {3} {4}{5}{6}{7}}}",
-				memberName,
-				mark ?? Mark.Blank(),
-				string.IsNullOrWhiteSpace( serviceEndPoint ) ? string.Empty : serviceEndPoint,
-				string.IsNullOrWhiteSpace( requestParameters ) ? string.Empty : ", RequestParameters: " + requestParameters,
-				string.IsNullOrWhiteSpace( errors ) ? string.Empty : ", Errors:" + errors,
-				string.IsNullOrWhiteSpace( methodResult ) ? string.Empty : ", Result:" + methodResult,
-				string.IsNullOrWhiteSpace( additionalInfo ) ? string.Empty : ", " + additionalInfo,
-				string.IsNullOrWhiteSpace( payload ) ? string.Empty : ", " + payload
-			);
-			return str;
 		}
 	}
 }
