@@ -7,6 +7,7 @@ using NetSuiteAccess.Throttling;
 using NetSuiteSoapWS;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
@@ -534,12 +535,32 @@ namespace NetSuiteAccess.Services.Soap
 		/// <returns></returns>
 		public async System.Threading.Tasks.Task UpdatePurchaseOrderAsync( NetSuitePurchaseOrder order, CancellationToken cancellationToken )
 		{
+			if ( !(new NetSuitePurchaseOrderStatus[] { 
+					NetSuitePurchaseOrderStatus.PendingReceipt, 
+					NetSuitePurchaseOrderStatus.PartiallyReceived,
+					NetSuitePurchaseOrderStatus.PendingBillingPartiallyReceived }.Contains( order.Status ) ) )
+			{
+				return;
+			}
+
 			var mark = Mark.CreateNew();
 
 			if ( cancellationToken.IsCancellationRequested )
 			{
 				var exceptionDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
 				throw new NetSuiteException( string.Format( "{0}. Task was cancelled", exceptionDetails ) );
+			}
+
+			// set order's items as received if necessary, order cannot be changed further
+			if ( order.Items.Any( i => i.ReceivedQuantity > 0 )
+				|| order.Status != NetSuitePurchaseOrderStatus.PendingReceipt )
+			{
+				// purchase orders created from sales orders cannot have item receipts
+				if ( order.CreatedFrom == null )
+				{
+					await this.ReceiveOrder( order, cancellationToken ).ConfigureAwait( false );
+					return;
+				}
 			}
 
 			var vendor = await this.GetVendorByNameAsync( order.SupplierName, cancellationToken ).ConfigureAwait( false );
@@ -562,20 +583,20 @@ namespace NetSuiteAccess.Services.Soap
 			};
 
 			var purchaseOrderRecordItems = new List< PurchaseOrderItem >();
-			if ( order.Status.Equals( "Pending Receipt" ) )
+			if ( order.Status == NetSuitePurchaseOrderStatus.PendingReceipt )
 			{
 				foreach( var orderItem in order.Items )
 				{
 					var item = await this.GetItemBySkuAsync( orderItem.Sku, cancellationToken ).ConfigureAwait( false );
 
-					if ( item != null)
+					if ( item != null )
 					{
 						purchaseOrderRecordItems.Add( new PurchaseOrderItem()
 						{
 							item = new RecordRef() { internalId = item.internalId }, 
 							quantity = orderItem.Quantity,
 							quantitySpecified = true,
-							rate = orderItem.UnitPrice.ToString()
+							rate = orderItem.UnitPrice.ToString( CultureInfo.InvariantCulture )
 						} );
 					}
 				}
@@ -583,7 +604,7 @@ namespace NetSuiteAccess.Services.Soap
 				purchaseOrderRecord.itemList = new PurchaseOrderItemList()
 				{
 					item = purchaseOrderRecordItems.ToArray()
-				};	
+				};
 			}
 
 			if ( purchaseOrderRecordItems.Count == 0 )
@@ -601,6 +622,136 @@ namespace NetSuiteAccess.Services.Soap
 			{
 				throw new NetSuiteException( response.writeResponse.status.statusDetail[0].message );
 			}
+		}
+
+		/// <summary>
+		///	Receive order
+		/// </summary>
+		/// <param name="purchaseOrder"></param>
+		/// <param name="itemsIds"></param>
+		/// <param name="cancellationToken"></param>
+		/// <returns></returns>
+		public async System.Threading.Tasks.Task ReceiveOrder( NetSuitePurchaseOrder purchaseOrder, CancellationToken cancellationToken )
+		{
+			var existingItemsReceipt = await this.SearchItemsReceipt( purchaseOrder, cancellationToken ).ConfigureAwait( false );
+
+			if ( existingItemsReceipt == null )
+			{
+				await this.CreateItemsReceipt( purchaseOrder, cancellationToken ).ConfigureAwait( false );
+				return;
+			}
+
+			await this.UpdateItemsReceipt( existingItemsReceipt, purchaseOrder, cancellationToken ).ConfigureAwait( false );
+		}
+
+		/// <summary>
+		///	Create new items receipt document
+		/// </summary>
+		/// <param name="purchaseOrder"></param>
+		/// <param name="itemsIds"></param>
+		/// <param name="cancellationToken"></param>
+		/// <returns></returns>
+		public async System.Threading.Tasks.Task CreateItemsReceipt( NetSuitePurchaseOrder purchaseOrder, CancellationToken cancellationToken )
+		{
+			var mark = Mark.CreateNew();
+
+			ItemReceipt itemsReceipt = null;
+			var initResponse = await this._service.initializeAsync( null, this._passport, null, null, null, 
+				new InitializeRecord() { 
+					reference = new InitializeRef() { 
+						internalId = purchaseOrder.Id, 
+						type = InitializeRefType.purchaseOrder, 
+						typeSpecified = true
+					}, 
+					type = InitializeType.itemReceipt } );
+
+			if ( !initResponse.readResponse.status.isSuccess )
+				throw new NetSuiteException( initResponse.readResponse.status.statusDetail[0].message );
+			
+			itemsReceipt = initResponse.readResponse.record as ItemReceipt;
+			if ( itemsReceipt != null )
+			{
+				// otherwise we'll receive error from NetSuite
+				itemsReceipt.exchangeRateSpecified = false;
+
+				foreach( var itemReceiptItem in itemsReceipt.itemList.item )
+				{
+					var poItem = purchaseOrder.Items.FirstOrDefault( i => i.Sku.ToLower().Equals( itemReceiptItem.item.name.ToLower() ) );
+
+					if ( poItem != null )
+					{
+						itemReceiptItem.quantity = poItem.ReceivedQuantity;
+					}
+				}
+
+				var response = await this.ThrottleRequestAsync( mark, ( token ) =>
+				{
+					return this._service.addAsync( null, this._passport, null, null, null, itemsReceipt );
+				}, itemsReceipt.ToJson(), cancellationToken ).ConfigureAwait( false );
+
+				if ( !response.writeResponse.status.isSuccess )
+				{
+					throw new NetSuiteException( response.writeResponse.status.statusDetail[0].message );
+				}
+			}
+		}
+
+		/// <summary>
+		///	Update items receipt document
+		/// </summary>
+		/// <param name="purchaseOrder"></param>
+		/// <param name="itemsIds"></param>
+		/// <param name="cancellationToken"></param>
+		/// <returns></returns>
+		public async System.Threading.Tasks.Task UpdateItemsReceipt( ItemReceipt itemsReceipt, NetSuitePurchaseOrder purchaseOrder, CancellationToken cancellationToken )
+		{
+			var mark = Mark.CreateNew();
+
+			foreach( var itemReceiptItem in itemsReceipt.itemList.item )
+			{
+				var poItem = purchaseOrder.Items.FirstOrDefault( i => i.Sku.ToLower().Equals( itemReceiptItem.item.name.ToLower() ) );
+
+				if ( poItem != null )
+				{
+					itemReceiptItem.quantity = poItem.ReceivedQuantity; 
+				}
+			}
+
+			// otherwise we'll receive error from NetSuite
+			itemsReceipt.exchangeRateSpecified = false;
+
+			var response = await this.ThrottleRequestAsync( mark, ( token ) =>
+			{
+				return this._service.updateAsync( null, this._passport, null, null, null, itemsReceipt );
+			}, itemsReceipt.ToJson(), cancellationToken ).ConfigureAwait( false );
+
+			if ( !response.writeResponse.status.isSuccess )
+			{
+				throw new NetSuiteException( response.writeResponse.status.statusDetail[0].message );
+			}
+		}
+
+		/// <summary>
+		///	Find existing item receipt document related to purchase order
+		/// </summary>
+		/// <param name="purchaseOrder"></param>
+		/// <param name="cancellationToken"></param>
+		/// <returns></returns>
+		public async System.Threading.Tasks.Task< ItemReceipt > SearchItemsReceipt( NetSuitePurchaseOrder purchaseOrder, CancellationToken cancellationToken )
+		{
+			var mark = Mark.CreateNew();
+			var itemsReceiptSearch = new TransactionSearchBasic()
+			{
+				createdFrom = new SearchMultiSelectField()
+				{
+					@operator = SearchMultiSelectFieldOperator.anyOf,
+					operatorSpecified = true,
+					searchValue = new RecordRef[] { new RecordRef() { internalId = purchaseOrder.Id } }
+				}
+			};
+
+			var response = await this.SearchRecords( itemsReceiptSearch, mark, cancellationToken ).ConfigureAwait( false );
+			return response.OfType< ItemReceipt >().FirstOrDefault();
 		}
 
 		/// <summary>

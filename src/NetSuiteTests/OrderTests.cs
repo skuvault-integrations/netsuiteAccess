@@ -142,9 +142,64 @@ namespace NetSuiteTests
 			updatedPurchaseOrder.Items.Count().Should().Be( purchaseOrder.Items.Count() );
 		}
 
+		[ Test ]
+		public void AddReceivedQuantityToPurchaseOrderWithoutItemReceipt()
+		{
+			var orderInternalId = "26006";
+			var random = new Random();
+			var purchaseOrder = this.GetOrderByIdAsync( orderInternalId );
+			purchaseOrder.Items.First().ReceivedQuantity = random.Next( 1, purchaseOrder.Items.First().Quantity - 1 );
+
+			Assert.DoesNotThrowAsync( async () =>
+			{
+				await this._ordersService.UpdatePurchaseOrderAsync( purchaseOrder, CancellationToken.None );
+			} );
+		}
+
+		[ Test ]
+		public void AddReceivedQuantityToPurchaseOrderWithItemReceipt()
+		{
+			var orderInternalId = "26100";
+			var random = new Random();
+			var purchaseOrder = this.GetOrderByIdAsync( orderInternalId );
+			purchaseOrder.Items.First().ReceivedQuantity = random.Next( 1, purchaseOrder.Items.First().Quantity - 1 );
+
+			Assert.DoesNotThrowAsync( async () =>
+			{
+				await this._ordersService.UpdatePurchaseOrderAsync( purchaseOrder, CancellationToken.None );
+			} );
+		}
+
+		[ Test ]
+		public void AddAllReceivedQuantityToPurchaseOrderWithItemReceipt()
+		{
+			var orderInternalId = "26100";
+			var purchaseOrder = this.GetOrderByIdAsync( orderInternalId );
+			purchaseOrder.Items.First().ReceivedQuantity = purchaseOrder.Items.First().Quantity;
+
+			Assert.DoesNotThrowAsync( async () =>
+			{
+				await this._ordersService.UpdatePurchaseOrderAsync( purchaseOrder, CancellationToken.None );
+			} );
+		}
+
+		[ Test ]
+		public void AddReceivedQuantityToPurchaseOrderCreatedFrom()
+		{
+			var orderInternalId = "26105";
+			var random = new Random();
+			var purchaseOrder = this.GetOrderByIdAsync( orderInternalId );
+			purchaseOrder.Items.First().ReceivedQuantity = random.Next( 1, purchaseOrder.Items.First().Quantity - 1 );
+
+			Assert.DoesNotThrowAsync( async () =>
+			{
+				await this._ordersService.UpdatePurchaseOrderAsync( purchaseOrder, CancellationToken.None );
+			} );
+		}
+
 		private NetSuitePurchaseOrder GetOrderByIdAsync( string internalId )
 		{
-			return this._ordersService.GetPurchaseOrdersAsync( DateTime.UtcNow.AddMonths( -1 ), DateTime.UtcNow, CancellationToken.None )
+			return this._ordersService.GetPurchaseOrdersAsync( DateTime.UtcNow.AddMonths( -2 ), DateTime.UtcNow, CancellationToken.None )
 								.Result
 								.FirstOrDefault( o => o.Id.Equals( internalId ) );
 		}
