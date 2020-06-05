@@ -500,7 +500,7 @@ namespace NetSuiteAccess.Services.Soap
 						item = new RecordRef() { internalId = item.internalId }, 
 						quantity = orderItem.Quantity,
 						quantitySpecified = true,
-						rate = orderItem.UnitPrice.ToString(),
+						rate = orderItem.UnitPrice.ToString( CultureInfo.InvariantCulture ),
 						quantityBilled = orderItem.Quantity,
 						quantityBilledSpecified = order.PaymentStatus == NetSuitePaymentStatus.Paid, 
 					} );
@@ -535,10 +535,10 @@ namespace NetSuiteAccess.Services.Soap
 		/// <returns></returns>
 		public async System.Threading.Tasks.Task UpdatePurchaseOrderAsync( NetSuitePurchaseOrder order, CancellationToken cancellationToken )
 		{
-			if ( !(new NetSuitePurchaseOrderStatus[] { 
-					NetSuitePurchaseOrderStatus.PendingReceipt, 
-					NetSuitePurchaseOrderStatus.PartiallyReceived,
-					NetSuitePurchaseOrderStatus.PendingBillingPartiallyReceived }.Contains( order.Status ) ) )
+			var pendingPoStatuses = new NetSuitePurchaseOrderStatus[] { NetSuitePurchaseOrderStatus.PendingReceipt, 
+													NetSuitePurchaseOrderStatus.PartiallyReceived,
+													NetSuitePurchaseOrderStatus.PendingBillingPartiallyReceived };
+			if ( !pendingPoStatuses.Contains( order.Status ) )
 			{
 				return;
 			}
@@ -625,7 +625,8 @@ namespace NetSuiteAccess.Services.Soap
 		}
 
 		/// <summary>
-		///	Receive order
+		///	Set order's items as received. NetSuite tracks received quantity in the separate transaction called ReceiptItem.
+		///	New transaction will be created if necessary.
 		/// </summary>
 		/// <param name="purchaseOrder"></param>
 		/// <param name="itemsIds"></param>
@@ -654,16 +655,20 @@ namespace NetSuiteAccess.Services.Soap
 		public async System.Threading.Tasks.Task CreateItemsReceipt( NetSuitePurchaseOrder purchaseOrder, CancellationToken cancellationToken )
 		{
 			var mark = Mark.CreateNew();
-
 			ItemReceipt itemsReceipt = null;
-			var initResponse = await this._service.initializeAsync( null, this._passport, null, null, null, 
-				new InitializeRecord() { 
-					reference = new InitializeRef() { 
-						internalId = purchaseOrder.Id, 
-						type = InitializeRefType.purchaseOrder, 
-						typeSpecified = true
-					}, 
-					type = InitializeType.itemReceipt } );
+			var itemReceiptInitRecord = new InitializeRecord() { 
+				reference = new InitializeRef() { 
+					internalId = purchaseOrder.Id, 
+					type = InitializeRefType.purchaseOrder, 
+					typeSpecified = true
+				}, 
+				type = InitializeType.itemReceipt 
+			};
+			var initResponse = await this.ThrottleRequestAsync( mark, ( token ) =>
+			{
+				return this._service.initializeAsync( null, this._passport, null, null, null, itemReceiptInitRecord );
+					
+			}, itemReceiptInitRecord.ToJson(), cancellationToken ).ConfigureAwait( false );
 
 			if ( !initResponse.readResponse.status.isSuccess )
 				throw new NetSuiteException( initResponse.readResponse.status.statusDetail[0].message );
