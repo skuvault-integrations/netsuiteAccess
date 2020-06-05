@@ -14,6 +14,7 @@ namespace NetSuiteAccess.Models
 		public DateTime ShipDate { get; set; }
 		public NetSuitePurchaseOrderItem[] Items { get; set; }
 		public string PrivateNote { get; set; }
+		public string CreatedFrom { get; set; }
 	}
 
 	public class NetSuitePurchaseOrderItem
@@ -22,6 +23,7 @@ namespace NetSuiteAccess.Models
 		public string Title { get; set; }
 		public decimal UnitPrice { get; set; }
 		public int Quantity { get; set; }
+		public int ReceivedQuantity { get; set; }
 	}
 
 	public enum NetSuitePurchaseOrderStatus
@@ -120,7 +122,8 @@ namespace NetSuiteAccess.Models
 				Status = GetPurchaseOrderStatus( order.status ),
 				Total = (decimal)order.total,
 				ShipDate = order.shipDate,
-				PrivateNote = order.memo
+				PrivateNote = order.memo,
+				CreatedFrom = order.createdFrom?.internalId
 			};
 
 			if ( order.entity != null )
