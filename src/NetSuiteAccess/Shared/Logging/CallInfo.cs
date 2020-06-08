@@ -11,7 +11,7 @@ namespace NetSuiteAccess.Shared.Logging
 		public string LibMethodName { get; set; }
 		public string Endpoint { get; set; }
 		public string RequestParameters { get; set; }
-		public string Method { get; set; }
+		public string MethodType { get; set; }
 		public object Body { get; set; }
 		public string AdditionalInfo { get; set; }
 		public object Response { get; set; }
@@ -42,7 +42,7 @@ namespace NetSuiteAccess.Shared.Logging
 				Mark = mark?.ToString() ?? "Unknown",
 				Endpoint = serviceEndPoint,
 				RequestParameters = requestParameters,
-				Method = methodType?.ToString() ?? "Uknown",
+				MethodType = methodType?.ToString() ?? "Unknown",
 				Body = payload,
 				LibMethodName = libMethodName,
 				AdditionalInfo = additionalInfo,
