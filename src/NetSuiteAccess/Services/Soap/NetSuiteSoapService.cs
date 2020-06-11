@@ -806,9 +806,9 @@ namespace NetSuiteAccess.Services.Soap
 				{
 						@operator = SearchDateFieldOperator.within,
 						operatorSpecified = true,
-						searchValue = startDateUtc,
+						searchValue = startDateUtc.ToUniversalTime(),
 						searchValueSpecified = true,
-						searchValue2 = endDateUtc,
+						searchValue2 = endDateUtc.ToUniversalTime(),
 						searchValue2Specified = true
 				},
 				recordType = new SearchStringField()
