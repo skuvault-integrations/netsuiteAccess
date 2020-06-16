@@ -197,6 +197,20 @@ namespace NetSuiteTests
 			} );
 		}
 
+		[ Test ]
+		public void SetZeroReceivedQuantityToPurchaseOrderWithItemReceiptAndNotPendingReceiptStatus()
+		{
+			var orderInternalId = "26005";
+			var random = new Random();
+			var purchaseOrder = this.GetOrderByIdAsync( orderInternalId );
+			purchaseOrder.Items.First().ReceivedQuantity = 0;
+
+			Assert.DoesNotThrowAsync( async () =>
+			{
+				await this._ordersService.UpdatePurchaseOrderAsync( purchaseOrder, CancellationToken.None );
+			} );
+		}
+
 		private NetSuitePurchaseOrder GetOrderByIdAsync( string internalId )
 		{
 			return this._ordersService.GetPurchaseOrdersAsync( DateTime.UtcNow.AddMonths( -2 ), DateTime.UtcNow, CancellationToken.None )
