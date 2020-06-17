@@ -1,5 +1,5 @@
 ﻿using FluentAssertions;
-using NetSuiteAccess.Exceptions;
+using Netco.Logging;
 using NetSuiteAccess.Services.Items;
 using NUnit.Framework;
 using System;
@@ -77,7 +77,7 @@ namespace NetSuiteTests
 				inventory.Add( "NS-testsku" + i.ToString(), random.Next( 1, 100 ) );
 			}
 
-			await this._itemsService.UpdateSkusQuantitiesAsync( accountId, warehouse, inventory, CancellationToken.None );
+			await this._itemsService.UpdateSkusQuantitiesAsync( accountId, warehouse, inventory, CancellationToken.None, Mark.Blank() );
 
 			foreach( var inventoryItem in inventory )
 			{
@@ -101,7 +101,7 @@ namespace NetSuiteTests
 
 			Assert.DoesNotThrowAsync( async () =>
 			{
-				await this._itemsService.UpdateSkusQuantitiesAsync( accountId, warehouse, inventory, CancellationToken.None );
+				await this._itemsService.UpdateSkusQuantitiesAsync( accountId, warehouse, inventory, CancellationToken.None, Mark.Blank() );
 			} );
 		}
 
@@ -109,14 +109,14 @@ namespace NetSuiteTests
 		public void GetInventoryItemsCreatedAfterSpecifiedDate()
 		{
 			var createdDate = new DateTime( 2019, 12, 1 );
-			var newItems = this._itemsService.GetItemsCreatedUpdatedAfterAsync( createdDate, false, CancellationToken.None ).Result;
+			var newItems = this._itemsService.GetItemsCreatedUpdatedAfterAsync( createdDate, false, CancellationToken.None, Mark.Blank() ).Result;
 			newItems.Count().Should().BeGreaterThan( 0 );
 		}
 
 		[ Test ]
 		public void GetAllInventoryItems()
 		{
-			var newItems = this._itemsService.GetItemsCreatedUpdatedAfterAsync( DateTime.MinValue, true, CancellationToken.None ).Result;
+			var newItems = this._itemsService.GetItemsCreatedUpdatedAfterAsync( DateTime.MinValue, true, CancellationToken.None, Mark.Blank() ).Result;
 			newItems.Count().Should().BeGreaterThan( 0 );
 		}
 
@@ -124,7 +124,7 @@ namespace NetSuiteTests
 		public void GetInventoryItemsCreatedAndModifiedAfterSpecificDate()
 		{
 			var createOrModifiedDate = new DateTime( 2019, 12, 1 );
-			var items = this._itemsService.GetItemsCreatedUpdatedAfterAsync( createOrModifiedDate, true, CancellationToken.None ).Result;
+			var items = this._itemsService.GetItemsCreatedUpdatedAfterAsync( createOrModifiedDate, true, CancellationToken.None, Mark.Blank() ).Result;
 			items.Count().Should().BeGreaterThan( 0 );
 		}
 
@@ -132,7 +132,7 @@ namespace NetSuiteTests
 		public void GetEmptyInventoryItemsListCreatedAndModifiedAfterSpecificDate()
 		{
 			var createOrModifiedDate = new DateTime( 2100, 12, 1 );
-			var items = this._itemsService.GetItemsCreatedUpdatedAfterAsync( createOrModifiedDate, true, CancellationToken.None ).Result;
+			var items = this._itemsService.GetItemsCreatedUpdatedAfterAsync( createOrModifiedDate, true, CancellationToken.None, Mark.Blank() ).Result;
 			items.Count().Should().Be( 0 );
 		}
 	}

@@ -2,6 +2,7 @@
 using System;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
+using Netco.Logging;
 
 namespace NetSuiteAccess.Shared.Logging
 {

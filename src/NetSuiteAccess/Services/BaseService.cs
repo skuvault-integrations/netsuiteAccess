@@ -1,4 +1,5 @@
 ﻿using CuttingEdge.Conditions;
+using Netco.Logging;
 using NetSuiteAccess.Configuration;
 using NetSuiteAccess.Exceptions;
 using NetSuiteAccess.Models;

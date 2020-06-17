@@ -1,4 +1,5 @@
 ﻿using CuttingEdge.Conditions;
+using Netco.Logging;
 using NetSuiteAccess.Configuration;
 using NetSuiteAccess.Exceptions;
 using NetSuiteAccess.Models;
@@ -158,10 +159,8 @@ namespace NetSuiteAccess.Services.Soap
 		/// <param name="modifiedDateUtc"></param>
 		/// <param name="cancellationToken"></param>
 		/// <returns></returns>
-		public Task< IEnumerable< Record > > GetItemsModifiedAfterAsync( DateTime modifiedDateUtc, CancellationToken cancellationToken )
+		public Task< IEnumerable< Record > > GetItemsModifiedAfterAsync( DateTime modifiedDateUtc, CancellationToken cancellationToken, Mark mark )
 		{
-			var mark = Mark.CreateNew();
-
 			if ( cancellationToken.IsCancellationRequested )
 			{
 				var exceptionDetails = CallInfo.CreateInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
@@ -194,10 +193,8 @@ namespace NetSuiteAccess.Services.Soap
 		/// <param name="item"></param>
 		/// <param name="cancellationToken"></param>
 		/// <returns></returns>
-		public async Task< ItemAvailability[] > GetItemInventoryAsync( InventoryItem item, CancellationToken cancellationToken )
+		public async Task< ItemAvailability[] > GetItemInventoryAsync( InventoryItem item, CancellationToken cancellationToken, Mark mark )
 		{
-			var mark = Mark.CreateNew();
-
 			if ( cancellationToken.IsCancellationRequested )
 			{
 				var exceptionDetails = CallInfo.CreateInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );

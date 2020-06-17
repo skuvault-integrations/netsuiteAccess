@@ -1,4 +1,5 @@
 ﻿using CuttingEdge.Conditions;
+using Netco.Logging;
 using NetSuiteAccess.Configuration;
 using NetSuiteAccess.Exceptions;
 using NetSuiteAccess.Models;
@@ -56,6 +57,7 @@ namespace NetSuiteAccess.Services.Items
 		/// <returns></returns>
 		public async System.Threading.Tasks.Task UpdateItemQuantityBySkuAsync( int accountId, string warehouseName, string sku, int quantity, CancellationToken token )
 		{
+			var mark = Mark.CreateNew();
 			if ( string.IsNullOrWhiteSpace( sku ) || string.IsNullOrWhiteSpace( warehouseName ) )
 				return;
 
@@ -64,7 +66,7 @@ namespace NetSuiteAccess.Services.Items
 				{ sku, quantity }
 			};
 
-			await this.UpdateSkusQuantitiesAsync( accountId, warehouseName, inventoryAdjustment, token ).ConfigureAwait( false );
+			await this.UpdateSkusQuantitiesAsync( accountId, warehouseName, inventoryAdjustment, token, mark ).ConfigureAwait( false );
 		}
 
 		/// <summary>
@@ -76,7 +78,7 @@ namespace NetSuiteAccess.Services.Items
 		/// <param name="skuQuantities">Sku (item display name)</param>
 		/// <param name="token">Cancellation token</param>
 		/// <returns></returns>
-		public async System.Threading.Tasks.Task UpdateSkusQuantitiesAsync( int accountId, string warehouseName, Dictionary< string, int > skuQuantities, CancellationToken token )
+		public async System.Threading.Tasks.Task UpdateSkusQuantitiesAsync( int accountId, string warehouseName, Dictionary< string, int > skuQuantities, CancellationToken token, Mark mark )
 		{
 			if ( string.IsNullOrWhiteSpace( warehouseName ) )
 				return;
@@ -131,7 +133,7 @@ namespace NetSuiteAccess.Services.Items
 
 			if ( inventoryAdjustment.Count > 0 )
 			{
-				await this._service.AdjustInventoryAsync( accountId, inventoryAdjustment.ToArray(), token ).ConfigureAwait( false );
+				await this._service.AdjustInventoryAsync( accountId, inventoryAdjustments, token ).ConfigureAwait( false );
 			}
 		}
 
@@ -145,12 +147,13 @@ namespace NetSuiteAccess.Services.Items
 		/// <returns></returns>
 		public async Task< int > GetSkuQuantity( string sku, string warehouseName, CancellationToken token )
 		{
+			var mark = Mark.CreateNew();
 			var item = await this._service.GetItemBySkuAsync( sku, token ).ConfigureAwait( false );
 
 			if ( item == null )
 				throw new NetSuiteItemNotFoundException( sku );
 
-			var itemInventory = await this._service.GetItemInventoryAsync( item, token ).ConfigureAwait( false );
+			var itemInventory = await this._service.GetItemInventoryAsync( item, token, mark ).ConfigureAwait( false );
 			var warehouseInventory = itemInventory.Where( i => i.locationId.name.ToLower().Equals( warehouseName.ToLower() ) ).FirstOrDefault();
 
 			if ( warehouseInventory == null )
@@ -166,7 +169,7 @@ namespace NetSuiteAccess.Services.Items
 		/// <param name="startDateUtc"></param>
 		/// <param name="includeUpdated"></param>
 		/// <returns></returns>
-		public async Task< IEnumerable< NetSuiteItem > > GetItemsCreatedUpdatedAfterAsync( DateTime startDateUtc, bool includeUpdated, CancellationToken token )
+		public async Task< IEnumerable< NetSuiteItem > > GetItemsCreatedUpdatedAfterAsync( DateTime startDateUtc, bool includeUpdated, CancellationToken token, Mark mark )
 		{
 			var items = new List< NetSuiteItem >();
 			var createdItems = this.ToNetSuiteItems( await this._service.GetItemsCreatedAfterAsync( startDateUtc, token ).ConfigureAwait( false ) );
@@ -174,7 +177,7 @@ namespace NetSuiteAccess.Services.Items
 
 			if ( includeUpdated )
 			{
-				var updatedItems = this.ToNetSuiteItems( await this._service.GetItemsModifiedAfterAsync( startDateUtc, token ).ConfigureAwait( false ) );
+				var updatedItems = this.ToNetSuiteItems( await this._service.GetItemsModifiedAfterAsync( startDateUtc, token, mark ).ConfigureAwait( false ) );
 				var updatedItemsWithoutDublicates = updatedItems.Where( i => !createdItems.Where( cr => !string.IsNullOrWhiteSpace( cr.Sku ) ).Any( cr => cr.Sku.Equals( i.Sku ) ) ).ToArray();
 				items.AddRange( updatedItemsWithoutDublicates );
 			}
