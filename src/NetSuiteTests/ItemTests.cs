@@ -1,12 +1,13 @@
 ﻿using FluentAssertions;
 using Netco.Logging;
 using NetSuiteAccess.Services.Items;
+using NetSuiteAccess.Services.Soap;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
+using Task = System.Threading.Tasks.Task;
 
 namespace NetSuiteTests
 {
@@ -14,7 +15,7 @@ namespace NetSuiteTests
 	public class ItemTests : BaseTest
 	{
 		private INetSuiteItemsService _itemsService;
-		private const string warehouse = "SkuVault";
+		private const string location = "SkuVault";
 		private const int accountId = 54;
 
 		[ SetUp ]
@@ -24,67 +25,98 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
-		public async Task UpdateSkuQuantityAsync()
+		public async Task UpdateSkuQuantityAsync_ItemNotInBin()
 		{
 			int newQuantity = new Random().Next( 1, 100 );
 			string testSku = "NS-testsku1";
 
-			await this._itemsService.UpdateItemQuantityBySkuAsync( accountId, warehouse, testSku, newQuantity, CancellationToken.None );
+			await this._itemsService.UpdateItemQuantityBySkuAsync( accountId, ItemTests.location, testSku, newQuantity, NetSuitePushInventoryModeEnum.ItemsNotInBins, CancellationToken.None, Mark.Blank() );
 
-			int currentQuantity = await this._itemsService.GetSkuQuantity( testSku, warehouse, CancellationToken.None );
+			int currentQuantity = await this._itemsService.GetItemQuantityAsync( testSku, ItemTests.location, CancellationToken.None );
 			currentQuantity.Should().Be( newQuantity );
 		}
 
 		[ Test ]
-		public async Task UpdateSkuQuantityWithBinFeatureEnabledOnlyOnItemLevel()
+		public async Task UpdateItemQuantityBySkuAsync_BinFeatureEnabledOnlyOnItemLevel()
 		{
 			int newQuantity = new Random().Next( 1, 100 );
-			string testsku = "NS-testsku555";
+			const string testsku = "NS-testsku555";
+			
+			await this._itemsService.UpdateItemQuantityBySkuAsync( accountId, ItemTests.location, testsku, newQuantity, NetSuitePushInventoryModeEnum.ItemsNotInBins, CancellationToken.None, Mark.Blank() );
 
-			int currentQuantity = await this._itemsService.GetSkuQuantity( testsku, warehouse, CancellationToken.None );
-			await this._itemsService.UpdateItemQuantityBySkuAsync( accountId, warehouse, testsku, newQuantity, CancellationToken.None );
-
-			int updatedQuantity = await this._itemsService.GetSkuQuantity( testsku, warehouse, CancellationToken.None );
+			int updatedQuantity = await this._itemsService.GetItemQuantityAsync( testsku, ItemTests.location, CancellationToken.None );
 			updatedQuantity.Should().Be( newQuantity );
 		}
 
 		[ Test ]
-		public async Task UpdateSkuQuantityWithBinFeatureEnabledOnLocationAndItemLevels()
+		public async Task UpdateItemQuantityBySkuAsync_ItemAndLocationUsesBins_ModeSetToPushToNotInBinOnly()
 		{
 			int newQuantity = new Random().Next( 1, 100 );
 			string testsku = "NS-testsku555";
-			string warehouse = "Los Angeles";
+			string locationName = "Boston";
 
-			int currentQuantity = await this._itemsService.GetSkuQuantity( testsku, warehouse, CancellationToken.None );
-			await this._itemsService.UpdateItemQuantityBySkuAsync( accountId, warehouse, testsku, newQuantity, CancellationToken.None );
+			int initialQuantity = await this._itemsService.GetItemQuantityAsync( testsku, locationName, CancellationToken.None );
+			await this._itemsService.UpdateItemQuantityBySkuAsync( accountId, locationName,  testsku, newQuantity, NetSuitePushInventoryModeEnum.ItemsNotInBins, CancellationToken.None, Mark.Blank() );
 
-			int updatedQuantity = await this._itemsService.GetSkuQuantity( testsku, warehouse, CancellationToken.None );
-			updatedQuantity.Should().Be( currentQuantity );
+			int updatedQuantity = await this._itemsService.GetItemQuantityAsync( testsku, locationName, CancellationToken.None );
+			updatedQuantity.Should().Be( initialQuantity );
 		}
 
 		[ Test ]
-		public async Task UpdateSkusQuantitiesAsync()
+		public async Task UpdateSkusQuantitiesAsync_ItemAndLocationUsesBins()
 		{
-			var inventory = new Dictionary< string, int >();
-			var random = new Random();
+			int newQuantity = new Random().Next( 1, 100 );
+			const string testsku = "GUARD528-test1";
+			const string locationName = "Boston";
+			const string locationId = "1";
+			const string binNumber = "1004";
+			var token = CancellationToken.None;
+			var binQuantities = new Dictionary< string, int >
+			{
+				{ binNumber, newQuantity }
+			};
+			var skuLocationQuantities = new Dictionary< string, Dictionary< string, int > >
+			{
+				{ testsku, binQuantities }
+			};
 
+			await this._itemsService.UpdateSkusQuantitiesAsync( accountId, locationName, skuLocationQuantities, 
+				NetSuitePushInventoryModeEnum.ItemsInBins, token, Mark.Blank() );
+
+			var updatedItem = await new NetSuiteSoapService( this.Config ).GetItemBySkuAsync( testsku, token );;
+			var updatedBinQuantity = updatedItem.binNumberList.binNumber.FirstOrDefault(
+				b => b.location == locationId && b.binNumber.name == binNumber ).onHand;
+			int.Parse( updatedBinQuantity ).Should().Be( newQuantity );
+		}
+
+		[ Test ]
+		public async Task UpdateSkusQuantitiesAsync_ItemsNotInBins()
+		{
+			var inventory = new Dictionary< string, Dictionary< string, int > >();
+			var random = new Random();
+			var binNumber = "RANDOM";
+			
 			for( int i = 1; i <= 18; i++ )
 			{
 				// item with bins
 				if ( i == 6 )
 					continue;
 
-				inventory.Add( "NS-testsku" + i.ToString(), random.Next( 1, 100 ) );
+				var binQuantity = new Dictionary< string, int >
+				{
+					{ binNumber, random.Next( 1, 100 ) }
+				}; 
+				inventory.Add( "NS-testsku" + i.ToString(), binQuantity );
 			}
 
-			await this._itemsService.UpdateSkusQuantitiesAsync( accountId, warehouse, inventory, CancellationToken.None, Mark.Blank() );
+			await this._itemsService.UpdateSkusQuantitiesAsync( accountId, location, inventory, NetSuitePushInventoryModeEnum.ItemsNotInBins, CancellationToken.None, Mark.Blank() );
 
 			foreach( var inventoryItem in inventory )
 			{
 				try
 				{
-					int currentQuantity = await this._itemsService.GetSkuQuantity( inventoryItem.Key, warehouse, CancellationToken.None );
-					currentQuantity.Should().Be( inventoryItem.Value );
+					int currentQuantity = await this._itemsService.GetItemQuantityAsync( inventoryItem.Key, location, CancellationToken.None );
+					currentQuantity.Should().Be( inventoryItem.Value[ binNumber ] );
 				}
 				catch( NetSuiteItemNotFoundException )
 				{ }
@@ -92,16 +124,47 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		public async Task GetItemInventoryAsync()
+		{
+			var soapService = new NetSuiteSoapService( this.Config );
+			const string sku = "GUARD528-test1";
+			var token = CancellationToken.None;
+			var item = await soapService.GetItemBySkuAsync( sku, token );
+
+			var itemInventory = await soapService.GetItemInventoryAsync( item, token, Mark.Blank() );
+
+			itemInventory.Any( i => Math.Abs( i.quantityAvailable ) > 0 ).Should().BeTrue();
+		}
+
+		[ Test ]
+		public async Task GetItemBySkuAsync_BinsInventory()
+		{
+			var soapService = new NetSuiteSoapService( this.Config );
+			const string sku = "GUARD528-test1";
+			var token = CancellationToken.None;
+			
+			var item = await soapService.GetItemBySkuAsync( sku, token );
+
+			item.binNumberList.binNumber.Any( b => !string.IsNullOrEmpty( b.onHand ) ).Should().BeTrue();
+		}
+
+		[ Test ]
 		public void UpdateParentSkuQuantityAsync()
 		{
-			var inventory = new Dictionary< string, int >
+			const string locationName = "";
+			var locationQuantity = new Dictionary< string, int >
 			{
-				{ "TestParent3", 10 }
+				{ locationName, 10 }
+			};
+			const string sku = "TestParent3";
+			var inventory = new Dictionary< string, Dictionary< string, int > >
+			{
+				{ sku, locationQuantity }
 			};
 
 			Assert.DoesNotThrowAsync( async () =>
 			{
-				await this._itemsService.UpdateSkusQuantitiesAsync( accountId, warehouse, inventory, CancellationToken.None, Mark.Blank() );
+				await this._itemsService.UpdateSkusQuantitiesAsync( accountId, location, inventory, NetSuitePushInventoryModeEnum.Both, CancellationToken.None, Mark.Blank() );
 			} );
 		}
 

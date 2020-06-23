@@ -192,6 +192,7 @@ namespace NetSuiteAccess.Services.Soap
 		/// </summary>
 		/// <param name="item"></param>
 		/// <param name="cancellationToken"></param>
+		/// <param name="mark"></param>
 		/// <returns></returns>
 		public async Task< ItemAvailability[] > GetItemInventoryAsync( InventoryItem item, CancellationToken cancellationToken, Mark mark )
 		{
@@ -203,7 +204,7 @@ namespace NetSuiteAccess.Services.Soap
 
 			var filter = new ItemAvailabilityFilter()
 			{
-				item = new RecordRef[] { new RecordRef() { internalId = item.internalId } }
+				item = new [] { new RecordRef { internalId = item.internalId } }
 			};
 
 			var response = await this.ThrottleRequestAsync( mark, ( token ) =>
@@ -227,10 +228,8 @@ namespace NetSuiteAccess.Services.Soap
 		/// <param name="inventory"></param>
 		/// <param name="cancellationToken"></param>
 		/// <returns></returns>
-		public async System.Threading.Tasks.Task AdjustInventoryAsync( int accountId, InventoryAdjustmentInventory[] inventory, CancellationToken cancellationToken )
+		public async System.Threading.Tasks.Task AdjustInventoryAsync( int accountId, InventoryAdjustmentInventory[] inventory, CancellationToken cancellationToken, Mark mark )
 		{
-			var mark = Mark.CreateNew();
-
 			if ( cancellationToken.IsCancellationRequested )
 			{
 				var exceptionDetails = CallInfo.CreateInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );
@@ -307,11 +306,10 @@ namespace NetSuiteAccess.Services.Soap
 		/// </summary>
 		/// <param name="locationName"></param>
 		/// <param name="cancellationToken"></param>
+		/// <param name="mark"></param>
 		/// <returns></returns>
-		public async Task< NetSuiteLocation > GetLocationByNameAsync( string locationName, CancellationToken cancellationToken )
+		public async Task< NetSuiteLocation > GetLocationByNameAsync( string locationName, CancellationToken cancellationToken, Mark mark )
 		{
-			var mark = Mark.CreateNew();
-
 			if ( cancellationToken.IsCancellationRequested )
 			{
 				var exceptionDetails = CallInfo.CreateInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );

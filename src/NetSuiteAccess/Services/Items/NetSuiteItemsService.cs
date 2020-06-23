@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Task = System.Threading.Tasks.Task;
 
 namespace NetSuiteAccess.Services.Items
 {
@@ -49,103 +50,90 @@ namespace NetSuiteAccess.Services.Items
 		///	Creates inventory adjustment document in NetSuite.
 		///	Requires Transactions -> Adjust Inventory role permission.
 		/// </summary>
-		/// <param name="accountInternalId">Account</param>
-		/// <param name="warehouseName">Warehouse name (location)</param>
+		/// <param name="accountId">Account</param>
+		/// <param name="locationName">SV Warehouse name (location)</param>
 		/// <param name="sku">Sku (item display name)</param>
 		/// <param name="quantity">Quantity</param>
+		/// <param name="pushInventoryModeEnum"></param>
 		/// <param name="token">Cancellation token</param>
+		/// <param name="mark"></param>
+		/// <param name="binName">Optional, only when update quantity in bins</param>
 		/// <returns></returns>
-		public async System.Threading.Tasks.Task UpdateItemQuantityBySkuAsync( int accountId, string warehouseName, string sku, int quantity, CancellationToken token )
+		public async Task UpdateItemQuantityBySkuAsync( int accountId, string locationName, string sku, int quantity, NetSuitePushInventoryModeEnum pushInventoryModeEnum, CancellationToken token, Mark mark, string binName = "" )
 		{
-			var mark = Mark.CreateNew();
-			if ( string.IsNullOrWhiteSpace( sku ) || string.IsNullOrWhiteSpace( warehouseName ) )
+			if ( string.IsNullOrWhiteSpace( sku ) || string.IsNullOrWhiteSpace( locationName ) )
 				return;
 
-			var inventoryAdjustment = new Dictionary< string, int >
+			var binInventory = new Dictionary< string, int >
 			{
-				{ sku, quantity }
+				{ binName, quantity }
 			};
 
-			await this.UpdateSkusQuantitiesAsync( accountId, warehouseName, inventoryAdjustment, token, mark ).ConfigureAwait( false );
+			var inventoryAdjustment = new Dictionary< string, Dictionary< string, int > >
+			{
+				{ sku, binInventory }
+			};
+
+			await this.UpdateSkusQuantitiesAsync( accountId, locationName, inventoryAdjustment, pushInventoryModeEnum, token, mark ).ConfigureAwait( false );
 		}
 
 		/// <summary>
 		///	Creates inventory adjustment document inside NetSuite.
 		///	Requires Transactions -> Adjust Inventory role permission.
 		/// </summary>
-		/// <param name="accountInternalId">Account</param>
-		/// <param name="warehouseName">Warehouse name (location)</param>
-		/// <param name="skuQuantities">Sku (item display name)</param>
+		/// <param name="accountId">Account</param>
+		/// <param name="locationName">SV Warehouse name (location)</param>
+		/// <param name="skuBinQuantities">Bin/quantity for each sku</param>
+		/// <param name="pushInventoryModeEnum">Determines whether to push to item locations in bins, not in bins, or both</param>
 		/// <param name="token">Cancellation token</param>
+		/// <param name="mark">Mark to correlate logs</param>
 		/// <returns></returns>
-		public async System.Threading.Tasks.Task UpdateSkusQuantitiesAsync( int accountId, string warehouseName, Dictionary< string, int > skuQuantities, CancellationToken token, Mark mark )
+		public async Task UpdateSkusQuantitiesAsync( int accountId, string locationName, Dictionary< string, Dictionary < string, int > > skuBinQuantities, NetSuitePushInventoryModeEnum pushInventoryModeEnum, CancellationToken token, Mark mark )
 		{
-			if ( string.IsNullOrWhiteSpace( warehouseName ) )
+			if ( string.IsNullOrWhiteSpace( locationName ) )
 				return;
 
-			var warehouseInfo = await this._service.GetLocationByNameAsync( warehouseName, token ).ConfigureAwait( false );
+			var location = await this._service.GetLocationByNameAsync( locationName, token, mark ).ConfigureAwait( false );
 
-			if ( warehouseInfo == null )
+			if ( location == null )
 			{
-				throw new NetSuiteException( string.Format( "Warehouse {0} was not found! Inventory sync failed", warehouseName ) );
+				throw new NetSuiteException( string.Format( "Warehouse {0} was not found! Inventory sync failed", locationName ) );
 			}
 
-			var inventoryAdjustment = new List< InventoryAdjustmentInventory >();
+			var inventoryAdjustmentsBuilder = new NetSuiteInventoryAdjustmentsBuilder( this._service, location, pushInventoryModeEnum, token, mark );			
 
-			foreach( var skuQuantity in skuQuantities )
+			foreach( var skuBinQuantity in skuBinQuantities )
 			{
-				var item = await this._service.GetItemBySkuAsync( skuQuantity.Key, token ).ConfigureAwait( false );
+				var sku = skuBinQuantity.Key;
+				var item = await this._service.GetItemBySkuAsync( sku, token ).ConfigureAwait( false );
 
 				if ( item == null )
-					continue;
-
-				// bins feature enabled both for location and item
-				if ( warehouseInfo.UseBins && item.useBins )
 					continue;
 
 				// we can't specify quantity for parent items
 				if ( item.matrixType == ItemMatrixType._parent && item.matrixTypeSpecified )
 					continue;
 
-				var itemInventory = await this._service.GetItemInventoryAsync( item, token ).ConfigureAwait( false );
-
-				if ( itemInventory == null )
-					continue;
-
-				var warehouseInventory = itemInventory.Where( i => i.locationId.internalId.Equals( warehouseInfo.Id.ToString() ) ).FirstOrDefault();
-
-				if ( warehouseInventory == null )
-					continue;
-
-				int adjustQuantityBy = skuQuantity.Value - (int)warehouseInventory.quantityOnHand;
-
-				if ( adjustQuantityBy == 0 )
-					continue;
-
-				inventoryAdjustment.Add( new InventoryAdjustmentInventory()
-				{
-					adjustQtyBy = adjustQuantityBy, 
-					item = new RecordRef() { internalId = item.internalId }, 
-					location = warehouseInventory.locationId, 
-					adjustQtyBySpecified = true, 
-				} );
+				var binQuantities = skuBinQuantity.Value;
+				await inventoryAdjustmentsBuilder.AddItemInventoryAdjustments( item, binQuantities );
 			}
 
-			if ( inventoryAdjustment.Count > 0 )
+			var inventoryAdjustments = inventoryAdjustmentsBuilder.InventoryAdjustments.ToArray();
+			if ( inventoryAdjustments.Length > 0 )
 			{
-				await this._service.AdjustInventoryAsync( accountId, inventoryAdjustments, token ).ConfigureAwait( false );
+				await this._service.AdjustInventoryAsync( accountId, inventoryAdjustments, token, mark ).ConfigureAwait( false );
 			}
 		}
 
 		/// <summary>
-		///	Find item by sku and get it's hand on quantity in specified warehouse
+		///	Find item by sku and get it's hand on quantity in specified location
 		///	Requires Lists -> Items role permission.
 		/// </summary>
 		/// <param name="sku">Sku (item displayName)</param>
-		/// <param name="warehouseName">Warehouse (location)</param>
+		/// <param name="locationName">SV Warehouse (location)</param>
 		/// <param name="token">Cancellation token</param>
 		/// <returns></returns>
-		public async Task< int > GetSkuQuantity( string sku, string warehouseName, CancellationToken token )
+		public async Task< int > GetItemQuantityAsync( string sku, string locationName, CancellationToken token )
 		{
 			var mark = Mark.CreateNew();
 			var item = await this._service.GetItemBySkuAsync( sku, token ).ConfigureAwait( false );
@@ -154,12 +142,12 @@ namespace NetSuiteAccess.Services.Items
 				throw new NetSuiteItemNotFoundException( sku );
 
 			var itemInventory = await this._service.GetItemInventoryAsync( item, token, mark ).ConfigureAwait( false );
-			var warehouseInventory = itemInventory.Where( i => i.locationId.name.ToLower().Equals( warehouseName.ToLower() ) ).FirstOrDefault();
+			var locationInventory = itemInventory.FirstOrDefault(i => i.locationId.name.ToLower().Equals( locationName.ToLower() ));
 
-			if ( warehouseInventory == null )
+			if ( locationInventory == null )
 				return 0;
 
-			return (int)warehouseInventory.quantityOnHand;
+			return (int)locationInventory.quantityOnHand;
 		}
 
 		/// <summary>
@@ -168,6 +156,8 @@ namespace NetSuiteAccess.Services.Items
 		/// </summary>
 		/// <param name="startDateUtc"></param>
 		/// <param name="includeUpdated"></param>
+		/// <param name="token">Cancellation token</param>
+		/// <param name="mark">Mark to correlate logs</param>
 		/// <returns></returns>
 		public async Task< IEnumerable< NetSuiteItem > > GetItemsCreatedUpdatedAfterAsync( DateTime startDateUtc, bool includeUpdated, CancellationToken token, Mark mark )
 		{
