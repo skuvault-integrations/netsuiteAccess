@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Task = System.Threading.Tasks.Task;
 
 namespace NetSuiteTests
@@ -79,14 +80,53 @@ namespace NetSuiteTests
 			{
 				{ testsku, binQuantities }
 			};
+			var binQuantityBefore = await GetItemBinQuantityAsync( testsku, locationId, binNumber );
+			var itemQuantityBefore = await this._itemsService.GetItemQuantityAsync( testsku, locationName, CancellationToken.None );
 
 			await this._itemsService.UpdateSkusQuantitiesAsync( accountId, locationName, skuLocationQuantities, 
 				NetSuitePushInventoryModeEnum.ItemsInBins, token, Mark.Blank() );
 
-			var updatedItem = await new NetSuiteSoapService( this.Config ).GetItemBySkuAsync( testsku, token );;
-			var updatedBinQuantity = updatedItem.binNumberList.binNumber.FirstOrDefault(
-				b => b.location == locationId && b.binNumber.name == binNumber ).onHand;
-			int.Parse( updatedBinQuantity ).Should().Be( newQuantity );
+			var updatedBinQuantity = await GetItemBinQuantityAsync( testsku, locationId, binNumber );;
+			updatedBinQuantity.Should().Be( newQuantity );
+			var itemQuantityAfter = await this._itemsService.GetItemQuantityAsync( testsku, locationName, CancellationToken.None );
+			var quantityChange = updatedBinQuantity - binQuantityBefore;
+			itemQuantityAfter.Should().Be( itemQuantityBefore + quantityChange );
+		}
+
+		[ Test ]
+		public async Task UpdateSkusQuantitiesAsync_ItemAndLocationUsesBins_BinIsNotAssociatedWithItem()
+		{
+			int newQuantity = new Random().Next( 1, 100 );
+			const string testsku = "GUARD528-test1";
+			const string locationName = "Boston";
+			const string locationId = "1";
+			const string binNumber = "1999";
+			var token = CancellationToken.None;
+			var binQuantities = new Dictionary< string, int >
+			{
+				{ binNumber, newQuantity }
+			};
+			var skuLocationQuantities = new Dictionary< string, Dictionary< string, int > >
+			{
+				{ testsku, binQuantities }
+			};
+			var binQuantityBefore = await GetItemBinQuantityAsync( testsku, locationId, binNumber );
+			var itemQuantityBefore = await this._itemsService.GetItemQuantityAsync( testsku, locationName, CancellationToken.None );
+
+			await this._itemsService.UpdateSkusQuantitiesAsync( accountId, locationName, skuLocationQuantities, 
+				NetSuitePushInventoryModeEnum.ItemsInBins, token, Mark.Blank() );
+
+			var updatedBinQuantity = await GetItemBinQuantityAsync( testsku, locationId, binNumber );;
+			updatedBinQuantity.Should().Be( binQuantityBefore );
+			var itemQuantityAfter = await this._itemsService.GetItemQuantityAsync( testsku, locationName, CancellationToken.None );
+			itemQuantityAfter.Should().Be( itemQuantityBefore );
+		}
+
+		private async Task< int > GetItemBinQuantityAsync( string sku, string locationId, string binNumber )
+		{
+			var inventoryItem = await new NetSuiteSoapService( this.Config ).GetItemBySkuAsync( sku, CancellationToken.None );;
+			return int.Parse( inventoryItem.binNumberList?.binNumber?.FirstOrDefault(
+				b => b.location == locationId && b.binNumber.name == binNumber )?.onHand ?? "0" );
 		}
 
 		[ Test ]
@@ -120,11 +160,9 @@ namespace NetSuiteTests
 			await this._itemsService.UpdateSkusQuantitiesAsync( accountId, locationName, skuBinQuantities, 
 				NetSuitePushInventoryModeEnum.Both, token, Mark.Blank() );
 
-			var updatedItem = await new NetSuiteSoapService( this.Config ).GetItemBySkuAsync( testSkuBin, token );;
-			var updatedBinQuantity = updatedItem.binNumberList.binNumber.FirstOrDefault(
-				b => b.location == locationId && b.binNumber.name == binNumber ).onHand;
-			int.Parse( updatedBinQuantity ).Should().Be( newQuantity );
-			int updatedNoBinQuantity = await this._itemsService.GetItemQuantityAsync( testSkuNoBin, locationName, CancellationToken.None );
+			var updatedBinQuantity = await GetItemBinQuantityAsync( testSkuBin, locationId, binNumber );
+			updatedBinQuantity.Should().Be( newQuantity );
+			var updatedNoBinQuantity = await this._itemsService.GetItemQuantityAsync( testSkuNoBin, locationName, CancellationToken.None );
 			updatedNoBinQuantity.Should().Be( newQuantityNoBin );
 		}
 

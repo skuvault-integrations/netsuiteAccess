@@ -43,7 +43,7 @@ namespace NetSuiteAccess.Services.Items
 			{
 				if ( _pushInventoryModeEnum == NetSuitePushInventoryModeEnum.ItemsNotInBins || _pushInventoryModeEnum == NetSuitePushInventoryModeEnum.Both )
 				{
-						await this.AddItemAdjustment( item, binQuantities );
+					await this.AddItemAdjustment( item, binQuantities );
 				}
 			}
 		}
