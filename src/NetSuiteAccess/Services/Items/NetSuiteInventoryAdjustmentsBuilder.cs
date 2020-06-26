@@ -28,41 +28,48 @@ namespace NetSuiteAccess.Services.Items
 			InventoryAdjustments = new List< InventoryAdjustmentInventory >();
 		}
 
-		public async System.Threading.Tasks.Task AddItemInventoryAdjustments( InventoryItem item, Dictionary< string, int > binQuantities )
+		public async System.Threading.Tasks.Task AddItemInventoryAdjustments( InventoryItem item, NetSuiteItemQuantity itemQuantity )
 		{
-			if ( !binQuantities.Any() )
+			if ( itemQuantity.AvailableQuantity == null && !itemQuantity.BinQuantities.Any() )
 				return;
 
 			if ( item.useBins  && this._location.UseBins )
 			{ 
 				if ( _pushInventoryModeEnum == NetSuitePushInventoryModeEnum.ItemsInBins || _pushInventoryModeEnum == NetSuitePushInventoryModeEnum.Both )
 				{
-					this.AddItemAdjustmentForBins( item, binQuantities );	
+					this.AddItemAdjustmentForBins( item, FilterBinQuantitiesByLocation( itemQuantity.BinQuantities ) );	
 				}
 			} else
 			{
 				if ( _pushInventoryModeEnum == NetSuitePushInventoryModeEnum.ItemsNotInBins || _pushInventoryModeEnum == NetSuitePushInventoryModeEnum.Both )
 				{
-					await this.AddItemAdjustment( item, binQuantities );
+					await this.AddItemAdjustment( item, itemQuantity.AvailableQuantity );
 				}
 			}
 		}
 
-		private void AddItemAdjustmentForBins( InventoryItem item, Dictionary< string, int > binQuantities )
+		private IDictionary< string, int > FilterBinQuantitiesByLocation( IEnumerable< NetSuiteBinQuantity > binQuantities )
+		{
+			return binQuantities.Where( x => x.LocationName == this._location.Name )
+				.GroupBy( x => x.BinNumber, x => x.Quantity )
+				.ToDictionary( x => x.Key, x => x.Sum() );
+		}
+
+		private void AddItemAdjustmentForBins( InventoryItem item, IDictionary< string, int > incomingBinQuantities )
 		{
 			var binsInLocation = item.binNumberList?.binNumber?
 				.Where( b => b.location == this._location.Id.ToString() )
 				?? new List< InventoryItemBinNumber >();
-		
+
 			foreach ( var bin in binsInLocation )
 			{
 				var binName = bin.binNumber.name;
-				if ( !binQuantities.ContainsKey( binName ) ) 
+				if ( !incomingBinQuantities.ContainsKey( binName ) ) 
 					continue;
 
 				int existingBinQuantity;
 				int.TryParse( bin.onHand, out existingBinQuantity );
-				var adjustQuantityBy = binQuantities[ binName ] - existingBinQuantity;
+				var adjustQuantityBy = incomingBinQuantities[ binName ] - existingBinQuantity;
 
 				if ( adjustQuantityBy == 0 )
 					continue;
@@ -92,7 +99,7 @@ namespace NetSuiteAccess.Services.Items
 			}
 		}
 
-		private async System.Threading.Tasks.Task AddItemAdjustment( InventoryItem item, Dictionary< string, int > binQuantity )
+		private async System.Threading.Tasks.Task AddItemAdjustment( InventoryItem item, int incomingItemQuantity )
 		{ 
 			var itemInventory = await this._service.GetItemInventoryAsync( item, this._token, this._mark ).ConfigureAwait( false );
 
@@ -101,7 +108,6 @@ namespace NetSuiteAccess.Services.Items
 			if ( locationInventory == null )
 				return;
 
-			var incomingItemQuantity = binQuantity.Sum( q => q.Value );
 			var adjustQuantityBy = incomingItemQuantity - ( int )locationInventory.quantityOnHand;
 
 			if ( adjustQuantityBy == 0 )
