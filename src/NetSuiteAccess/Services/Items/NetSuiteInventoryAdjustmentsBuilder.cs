@@ -1,4 +1,5 @@
-﻿using Netco.Logging;
+﻿using System;
+using Netco.Logging;
 using NetSuiteAccess.Models;
 using NetSuiteAccess.Services.Soap;
 using NetSuiteSoapWS;
@@ -47,8 +48,8 @@ namespace NetSuiteAccess.Services.Items
 
 		private IDictionary< string, int > FilterBinQuantitiesByLocation( IEnumerable< NetSuiteBinQuantity > binQuantities )
 		{
-			return binQuantities.Where( x => x.LocationName == this._location.Name )
-				.GroupBy( x => x.BinNumber, x => x.Quantity )
+			return binQuantities.Where( x => x.LocationName.Equals( this._location.Name, StringComparison.InvariantCultureIgnoreCase ) )
+				.GroupBy( x => x.BinNumber.ToUpperInvariant(), x => x.Quantity )
 				.ToDictionary( x => x.Key, x => x.Sum() );
 		}
 
@@ -63,7 +64,7 @@ namespace NetSuiteAccess.Services.Items
 
 			foreach ( var bin in binsInLocation )
 			{
-				var binName = bin.binNumber.name;
+				var binName = bin.binNumber.name.ToUpperInvariant();
 				if ( !incomingBinQuantities.ContainsKey( binName ) ) 
 					continue;
 
