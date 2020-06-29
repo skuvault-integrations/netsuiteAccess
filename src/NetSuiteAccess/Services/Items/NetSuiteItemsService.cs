@@ -57,7 +57,6 @@ namespace NetSuiteAccess.Services.Items
 		/// <param name="pushInventoryModeEnum"></param>
 		/// <param name="token">Cancellation token</param>
 		/// <param name="mark"></param>
-		/// <param name="binName">Optional, only when update quantity in bins</param>
 		/// <returns></returns>
 		public async Task UpdateItemQuantityBySkuAsync( int accountId, string locationName, string sku, int quantity, NetSuitePushInventoryModeEnum pushInventoryModeEnum, CancellationToken token, Mark mark )
 		{
