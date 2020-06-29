@@ -30,10 +30,7 @@ namespace NetSuiteAccess.Services.Items
 
 		public async System.Threading.Tasks.Task AddItemInventoryAdjustments( InventoryItem item, NetSuiteItemQuantity itemQuantity )
 		{
-			if ( itemQuantity.AvailableQuantity == null && !itemQuantity.BinQuantities.Any() )
-				return;
-
-			if ( item.useBins  && this._location.UseBins )
+			if ( item.useBins && this._location.UseBins )
 			{ 
 				if ( _pushInventoryModeEnum == NetSuitePushInventoryModeEnum.ItemsInBins || _pushInventoryModeEnum == NetSuitePushInventoryModeEnum.Both )
 				{
@@ -57,6 +54,9 @@ namespace NetSuiteAccess.Services.Items
 
 		private void AddItemAdjustmentForBins( InventoryItem item, IDictionary< string, int > incomingBinQuantities )
 		{
+			if ( !incomingBinQuantities.Any() )
+				return;
+
 			var binsInLocation = item.binNumberList?.binNumber?
 				.Where( b => b.location == this._location.Id.ToString() )
 				?? new List< InventoryItemBinNumber >();
