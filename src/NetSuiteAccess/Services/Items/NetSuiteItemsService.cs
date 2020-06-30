@@ -54,11 +54,11 @@ namespace NetSuiteAccess.Services.Items
 		/// <param name="locationName">SV Warehouse name (location)</param>
 		/// <param name="sku">Sku (item display name)</param>
 		/// <param name="quantity">Quantity</param>
-		/// <param name="pushInventoryModeEnum"></param>
+		/// <param name="inventoryBinsModeEnum"></param>
 		/// <param name="token">Cancellation token</param>
 		/// <param name="mark"></param>
 		/// <returns></returns>
-		public async Task UpdateItemQuantityBySkuAsync( int accountId, string locationName, string sku, int quantity, NetSuitePushInventoryModeEnum pushInventoryModeEnum, CancellationToken token, Mark mark )
+		public async Task UpdateItemQuantityBySkuAsync( int accountId, string locationName, string sku, int quantity, NetSuiteInventoryBinsModeEnum inventoryBinsModeEnum, CancellationToken token, Mark mark )
 		{
 			if ( string.IsNullOrWhiteSpace( sku ) || string.IsNullOrWhiteSpace( locationName ) )
 				return;
@@ -72,7 +72,7 @@ namespace NetSuiteAccess.Services.Items
 				{ sku, itemQuantity }
 			};
 
-			await this.UpdateSkusQuantitiesAsync( accountId, locationName, skuLocationQuantities, pushInventoryModeEnum, token, mark ).ConfigureAwait( false );
+			await this.UpdateSkusQuantitiesAsync( accountId, locationName, skuLocationQuantities, inventoryBinsModeEnum, token, mark ).ConfigureAwait( false );
 		}
 
 		/// <summary>
@@ -82,11 +82,11 @@ namespace NetSuiteAccess.Services.Items
 		/// <param name="accountId">Account</param>
 		/// <param name="locationName">SV Warehouse name (location)</param>
 		/// <param name="skuLocationQuantities">Bin/quantity for each sku</param>
-		/// <param name="pushInventoryModeEnum">Determines whether to push to item locations in bins, not in bins, or both</param>
+		/// <param name="inventoryBinsModeEnum">Determines whether to push to item quantities in bins, not in bins, or both</param>
 		/// <param name="token">Cancellation token</param>
 		/// <param name="mark">Mark to correlate logs</param>
 		/// <returns></returns>
-		public async Task UpdateSkusQuantitiesAsync( int accountId, string locationName, IDictionary< string, NetSuiteItemQuantity > skuLocationQuantities, NetSuitePushInventoryModeEnum pushInventoryModeEnum, CancellationToken token, Mark mark )
+		public async Task UpdateSkusQuantitiesAsync( int accountId, string locationName, IDictionary< string, NetSuiteItemQuantity > skuLocationQuantities, NetSuiteInventoryBinsModeEnum inventoryBinsModeEnum, CancellationToken token, Mark mark )
 		{
 			if ( string.IsNullOrWhiteSpace( locationName ) )
 				return;
@@ -98,7 +98,7 @@ namespace NetSuiteAccess.Services.Items
 				throw new NetSuiteException( string.Format( "Warehouse {0} was not found! Inventory sync failed", locationName ) );
 			}
 
-			var inventoryAdjustmentsBuilder = new NetSuiteInventoryAdjustmentsBuilder( this._service, location, pushInventoryModeEnum, token, mark );			
+			var inventoryAdjustmentsBuilder = new NetSuiteInventoryAdjustmentsBuilder( this._service, location, inventoryBinsModeEnum, token, mark );			
 
 			foreach( var skuLocationQuantity in skuLocationQuantities )
 			{

@@ -1,6 +1,6 @@
 ﻿namespace NetSuiteAccess.Services.Items
 {
-	public enum NetSuitePushInventoryModeEnum
+	public enum NetSuiteInventoryBinsModeEnum
 	{
 		/// <summary>
 		/// Push quantity to items if the selected NetSuite location doesn't Use Bins or the item doesn't Use Bins

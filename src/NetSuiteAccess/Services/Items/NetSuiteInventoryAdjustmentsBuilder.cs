@@ -13,17 +13,17 @@ namespace NetSuiteAccess.Services.Items
 	{
 		private readonly NetSuiteSoapService _service;
 		private readonly NetSuiteLocation _location;
-		private readonly NetSuitePushInventoryModeEnum _pushInventoryModeEnum;
+		private readonly NetSuiteInventoryBinsModeEnum _inventoryBinsModeEnum;
 		private readonly CancellationToken _token;
 		private readonly Mark _mark;
 
 		public List< InventoryAdjustmentInventory > InventoryAdjustments { get; }
 
-		public NetSuiteInventoryAdjustmentsBuilder( NetSuiteSoapService service, NetSuiteLocation location, NetSuitePushInventoryModeEnum pushInventoryModeEnum, CancellationToken token, Mark mark )
+		public NetSuiteInventoryAdjustmentsBuilder( NetSuiteSoapService service, NetSuiteLocation location, NetSuiteInventoryBinsModeEnum inventoryBinsModeEnum, CancellationToken token, Mark mark )
 		{
 			_service = service;
 			_location = location;
-			_pushInventoryModeEnum = pushInventoryModeEnum;
+			_inventoryBinsModeEnum = inventoryBinsModeEnum;
 			_token = token;
 			_mark = mark;
 			InventoryAdjustments = new List< InventoryAdjustmentInventory >();
@@ -33,13 +33,13 @@ namespace NetSuiteAccess.Services.Items
 		{
 			if ( item.useBins && this._location.UseBins )
 			{ 
-				if ( _pushInventoryModeEnum == NetSuitePushInventoryModeEnum.ItemsInBins || _pushInventoryModeEnum == NetSuitePushInventoryModeEnum.Both )
+				if ( _inventoryBinsModeEnum == NetSuiteInventoryBinsModeEnum.ItemsInBins || _inventoryBinsModeEnum == NetSuiteInventoryBinsModeEnum.Both )
 				{
 					this.AddItemAdjustmentForBins( item, FilterBinQuantitiesByLocation( itemQuantity.BinQuantities ) );	
 				}
 			} else
 			{
-				if ( _pushInventoryModeEnum == NetSuitePushInventoryModeEnum.ItemsNotInBins || _pushInventoryModeEnum == NetSuitePushInventoryModeEnum.Both )
+				if ( _inventoryBinsModeEnum == NetSuiteInventoryBinsModeEnum.ItemsNotInBins || _inventoryBinsModeEnum == NetSuiteInventoryBinsModeEnum.Both )
 				{
 					await this.AddItemAdjustment( item, itemQuantity.AvailableQuantity );
 				}
