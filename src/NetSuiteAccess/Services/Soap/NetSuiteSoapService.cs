@@ -549,15 +549,15 @@ namespace NetSuiteAccess.Services.Soap
 
 			// set order's items as received if necessary, order cannot be changed further
 			if ( order.Items.Any( i => i.ReceivedQuantity > 0 )
-				|| order.Status != NetSuitePurchaseOrderStatus.PendingReceipt )
-			{
 				// purchase orders created from sales orders cannot have item receipts
-				if ( order.CreatedFrom == null )
-				{
-					await this.ReceiveOrder( order, cancellationToken ).ConfigureAwait( false );
-					return;
-				}
+				&& order.CreatedFrom == null )
+			{
+				await this.ReceiveOrder( order, cancellationToken ).ConfigureAwait( false );
+				return;
 			}
+
+			if ( order.Status != NetSuitePurchaseOrderStatus.PendingReceipt )
+				return;
 
 			var vendor = await this.GetVendorByNameAsync( order.SupplierName, cancellationToken ).ConfigureAwait( false );
 
@@ -801,9 +801,9 @@ namespace NetSuiteAccess.Services.Soap
 				{
 						@operator = SearchDateFieldOperator.within,
 						operatorSpecified = true,
-						searchValue = startDateUtc,
+						searchValue = startDateUtc.ToUniversalTime(),
 						searchValueSpecified = true,
-						searchValue2 = endDateUtc,
+						searchValue2 = endDateUtc.ToUniversalTime(),
 						searchValue2Specified = true
 				},
 				recordType = new SearchStringField()
