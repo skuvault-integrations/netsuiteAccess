@@ -140,7 +140,7 @@ namespace NetSuiteAccess.Services.Items
 				throw new NetSuiteItemNotFoundException( sku );
 
 			var itemInventory = await this._service.GetItemInventoryAsync( item, token, mark ).ConfigureAwait( false );
-			var locationInventory = itemInventory.FirstOrDefault(i => i.locationId.name.ToLower().Equals( locationName.ToLower() ));
+			var locationInventory = itemInventory.FirstOrDefault( i => i.locationId.name.ToUpperInvariant().Equals( locationName.ToUpperInvariant() ) );
 
 			if ( locationInventory == null )
 				return 0;
