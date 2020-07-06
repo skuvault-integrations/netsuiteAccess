@@ -4,7 +4,7 @@ namespace NetSuiteAccess.Services.Items
 {
 	public class NetSuiteItemQuantity
 	{
-		public int AvailableQuantity;
+		public int? AvailableQuantity;
 		public IEnumerable< NetSuiteBinQuantity > BinQuantities;
 
 		public NetSuiteItemQuantity()

@@ -100,8 +100,11 @@ namespace NetSuiteAccess.Services.Items
 			}
 		}
 
-		private async System.Threading.Tasks.Task AddItemAdjustment( InventoryItem item, int incomingItemQuantity )
-		{ 
+		private async System.Threading.Tasks.Task AddItemAdjustment( InventoryItem item, int? incomingItemQuantity )
+		{
+			if ( !incomingItemQuantity.HasValue )
+				return; 
+
 			var itemInventory = await this._service.GetItemInventoryAsync( item, this._token, this._mark ).ConfigureAwait( false );
 
 			var locationInventory = itemInventory?.FirstOrDefault( i => i.locationId.internalId.Equals( this._location.Id.ToString() ) );
@@ -109,7 +112,7 @@ namespace NetSuiteAccess.Services.Items
 			if ( locationInventory == null )
 				return;
 
-			var adjustQuantityBy = incomingItemQuantity - ( int )locationInventory.quantityOnHand;
+			var adjustQuantityBy = incomingItemQuantity.Value - ( int )locationInventory.quantityOnHand;
 
 			if ( adjustQuantityBy == 0 )
 				return;
