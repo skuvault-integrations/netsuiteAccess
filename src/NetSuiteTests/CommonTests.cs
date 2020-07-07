@@ -4,6 +4,7 @@ using NetSuiteAccess.Services.Common;
 using NUnit.Framework;
 using System.Threading;
 using System.Threading.Tasks;
+using Netco.Logging;
 
 namespace NetSuiteTests
 {
@@ -29,7 +30,7 @@ namespace NetSuiteTests
 		public async Task GetLocationsByNameAsync()
 		{
 			var locationName = "San Francisco";
-			var location = await this._commonService.GetLocationByNameAsync( locationName, CancellationToken.None );
+			var location = await this._commonService.GetLocationByNameAsync( locationName, CancellationToken.None, Mark.Blank() );
 			location.Should().NotBeNull();
 		}
 
