@@ -17,6 +17,7 @@ using System.ServiceModel;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Task = System.Threading.Tasks.Task;
 
 namespace NetSuiteAccess.Services.Soap
 {
@@ -226,9 +227,12 @@ namespace NetSuiteAccess.Services.Soap
 		/// </summary>
 		/// <param name="accountId"></param>
 		/// <param name="inventory"></param>
+		/// <param name="subsidiaryId"></param>
 		/// <param name="cancellationToken"></param>
+		/// <param name="mark"></param>
 		/// <returns></returns>
-		public async System.Threading.Tasks.Task AdjustInventoryAsync( int accountId, InventoryAdjustmentInventory[] inventory, CancellationToken cancellationToken, Mark mark )
+		public async Task AdjustInventoryAsync( int accountId, InventoryAdjustmentInventory[] inventory, string subsidiaryId, 
+			CancellationToken cancellationToken, Mark mark )
 		{
 			if ( cancellationToken.IsCancellationRequested )
 			{
@@ -245,8 +249,13 @@ namespace NetSuiteAccess.Services.Soap
 				 inventoryList = new InventoryAdjustmentInventoryList()
 				 {
 					 inventory = inventory
-				 }, 
+				 } 
 			};
+
+			if ( !string.IsNullOrWhiteSpace( subsidiaryId ) )
+			{
+				adjustment.subsidiary = new RecordRef { internalId = subsidiaryId };
+			}
 
 			var response = await this.ThrottleRequestAsync( mark, ( token ) =>
 			{

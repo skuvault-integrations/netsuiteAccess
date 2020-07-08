@@ -119,7 +119,7 @@ namespace NetSuiteAccess.Services.Items
 			var inventoryAdjustments = inventoryAdjustmentsBuilder.InventoryAdjustments.ToArray();
 			if ( inventoryAdjustments.Length > 0 )
 			{
-				await this._service.AdjustInventoryAsync( accountId, inventoryAdjustments, token, mark ).ConfigureAwait( false );
+				await this._service.AdjustInventoryAsync( accountId, inventoryAdjustments, location.Subsidiaries?.FirstOrDefault(), token, mark ).ConfigureAwait( false );
 			}
 		}
 
