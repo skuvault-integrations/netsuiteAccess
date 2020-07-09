@@ -55,9 +55,6 @@ namespace NetSuiteAccess.Services.Items
 
 		private void AddItemAdjustmentForBins( InventoryItem item, IDictionary< string, int > incomingBinQuantities )
 		{
-			if ( !incomingBinQuantities.Any() )
-				return;
-
 			var binsInLocation = item.binNumberList?.binNumber?
 				.Where( b => b.location == this._location.Id.ToString() )
 				?? new List< InventoryItemBinNumber >();
@@ -65,12 +62,13 @@ namespace NetSuiteAccess.Services.Items
 			foreach ( var bin in binsInLocation )
 			{
 				var binName = bin.binNumber.name.ToUpperInvariant();
-				if ( !incomingBinQuantities.ContainsKey( binName ) ) 
+				int existingBinQuantity;
+				if ( !int.TryParse( bin.onHand, out existingBinQuantity ) )
 					continue;
 
-				int existingBinQuantity;
-				int.TryParse( bin.onHand, out existingBinQuantity );
-				var adjustQuantityBy = incomingBinQuantities[ binName ] - existingBinQuantity;
+				var incomingBinQuantity = incomingBinQuantities.ContainsKey( binName ) 
+					? incomingBinQuantities[ binName ] : 0;
+				var adjustQuantityBy = incomingBinQuantity - existingBinQuantity;
 
 				if ( adjustQuantityBy == 0 )
 					continue;
