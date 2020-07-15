@@ -62,13 +62,11 @@ namespace NetSuiteAccess.Services.Items
 			foreach ( var bin in binsInLocation )
 			{
 				var binName = bin.binNumber.name.ToUpperInvariant();
-				int existingBinQuantity;
-				if ( !int.TryParse( bin.onHand, out existingBinQuantity ) )
-					continue;
+				int binQuantity = int.TryParse( bin.onHand, out binQuantity ) ? binQuantity : 0;
 
 				var incomingBinQuantity = incomingBinQuantities.ContainsKey( binName ) 
 					? incomingBinQuantities[ binName ] : 0;
-				var adjustQuantityBy = incomingBinQuantity - existingBinQuantity;
+				var adjustQuantityBy = incomingBinQuantity - binQuantity;
 
 				if ( adjustQuantityBy == 0 )
 					continue;
