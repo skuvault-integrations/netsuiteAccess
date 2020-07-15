@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Netco.Logging;
 
 namespace NetSuiteAccess.Services.Common
 {
@@ -9,6 +10,6 @@ namespace NetSuiteAccess.Services.Common
 	{
 		Task< IEnumerable< NetSuiteLocation > > GetLocationsAsync( CancellationToken token );
 		Task< IEnumerable< NetSuiteAccount > > GetAccountsAsync( CancellationToken token );
-		Task< NetSuiteLocation > GetLocationByNameAsync( string locationName, CancellationToken token );
+		Task< NetSuiteLocation > GetLocationByNameAsync( string locationName, CancellationToken token, Mark mark );
 	}
 }

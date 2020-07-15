@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Netco.Logging;
 using NetSuiteAccess.Configuration;
 using NetSuiteAccess.Models;
-using NetSuiteAccess.Models.Commands;
 using NetSuiteAccess.Services.Soap;
 
 namespace NetSuiteAccess.Services.Common
@@ -33,9 +33,9 @@ namespace NetSuiteAccess.Services.Common
 			return _soapService.ListLocationsAsync( token );
 		}
 
-		public Task< NetSuiteLocation > GetLocationByNameAsync( string locationName, CancellationToken token )
+		public Task< NetSuiteLocation > GetLocationByNameAsync( string locationName, CancellationToken token, Mark mark )
 		{
-			return _soapService.GetLocationByNameAsync( locationName, token );
+			return _soapService.GetLocationByNameAsync( locationName, token, mark );
 		}
 	}
 }
