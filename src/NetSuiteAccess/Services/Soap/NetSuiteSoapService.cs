@@ -220,6 +220,25 @@ namespace NetSuiteAccess.Services.Soap
 			throw new NetSuiteException( response.getItemAvailabilityResult.status.statusDetail[0].message );
 		}
 
+		public async Task< KitItem > GetKitItemBySkuAsync( string sku, CancellationToken token, Mark mark )
+		{
+			var searchRecord = new ItemSearch
+			{
+				basic = new ItemSearchBasic
+				{
+					itemId = new SearchStringField
+					{
+						@operator = SearchStringFieldOperator.@is,
+						operatorSpecified = true,
+						searchValue = sku
+					}
+				}
+			};
+
+			var response = await this.SearchRecords( searchRecord, mark, token ).ConfigureAwait( false );
+			return response.OfType< KitItem >().FirstOrDefault();
+		}
+
 		/// <summary>
 		///	Adjust items inventory. 
 		///	Requires Transactions -> Adjust Inventory role permission. Level - Edit.
