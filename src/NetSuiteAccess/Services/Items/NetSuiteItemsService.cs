@@ -119,19 +119,19 @@ namespace NetSuiteAccess.Services.Items
 			var inventoryAdjustments = inventoryAdjustmentsBuilder.InventoryAdjustments.ToArray();
 			if ( inventoryAdjustments.Length > 0 )
 			{
-				await this._service.AdjustInventoryAsync( accountId, inventoryAdjustments, token, mark ).ConfigureAwait( false );
+				await this._service.AdjustInventoryAsync( accountId, inventoryAdjustments, location.Subsidiaries?.FirstOrDefault(), token, mark ).ConfigureAwait( false );
 			}
 		}
 
-		/// <summary>
-		///	Find item by sku and get it's hand on quantity in specified location
-		///	Requires Lists -> Items role permission.
-		/// </summary>
-		/// <param name="sku">Sku (item displayName)</param>
-		/// <param name="locationName">SV Warehouse (location)</param>
-		/// <param name="token">Cancellation token</param>
-		/// <returns></returns>
-		public async Task< int > GetItemQuantityAsync( string sku, string locationName, CancellationToken token )
+		///  <summary>
+		/// 	Find item by sku and get it's hand on quantity in specified location
+		/// 	Requires Lists -> Items role permission.
+		///  </summary>
+		///  <param name="sku">Sku (item displayName)</param>
+		///  <param name="locationId">SV Warehouse (location)</param>
+		///  <param name="token">Cancellation token</param>
+		///  <returns></returns>
+		public async Task< int > GetItemQuantityAsync( string sku, string locationId, CancellationToken token )
 		{
 			var mark = Mark.CreateNew();
 			var item = await this._service.GetItemBySkuAsync( sku, token ).ConfigureAwait( false );
@@ -140,7 +140,7 @@ namespace NetSuiteAccess.Services.Items
 				throw new NetSuiteItemNotFoundException( sku );
 
 			var itemInventory = await this._service.GetItemInventoryAsync( item, token, mark ).ConfigureAwait( false );
-			var locationInventory = itemInventory.FirstOrDefault( i => i.locationId.name.ToUpperInvariant().Equals( locationName.ToUpperInvariant() ) );
+			var locationInventory = itemInventory.FirstOrDefault( i => i.locationId.internalId.ToUpperInvariant().Equals( locationId.ToUpperInvariant() ) );
 
 			if ( locationInventory == null )
 				return 0;
