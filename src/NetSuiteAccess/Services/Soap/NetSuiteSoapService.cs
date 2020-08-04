@@ -869,9 +869,11 @@ namespace NetSuiteAccess.Services.Soap
 			var result = new List< Record >();
 			var response = await this.ThrottleRequestAsync( mark, ( token ) =>
 			{
-				var searchPreferences = new SearchPreferences()
+				var searchPreferences = new SearchPreferences
 				{
-					bodyFieldsOnly = false
+					bodyFieldsOnly = false,
+					pageSize = _config.SearchRecordsPageSize,
+					pageSizeSpecified = true
 				};
 
 				return this._service.searchAsync( null, this._passport, null, null, searchPreferences, searchRecord );
