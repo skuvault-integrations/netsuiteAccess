@@ -12,6 +12,7 @@ namespace NetSuiteAccess.Configuration
 		public readonly NetworkOptions NetworkOptions;
 
 		public int SearchRecordsPageSize { get; set; }
+		public static int GetCustomersByIdsPageSize = 100;
 
 		public NetSuiteConfig( NetSuiteCredentials credentials, ThrottlingOptions throttlingOptions, NetworkOptions networkOptions )
 		{

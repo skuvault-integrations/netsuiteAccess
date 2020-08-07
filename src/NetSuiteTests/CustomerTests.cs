@@ -1,7 +1,9 @@
-﻿using FluentAssertions;
+﻿using System;
+using FluentAssertions;
 using NetSuiteAccess.Services.Customers;
 using NUnit.Framework;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace NetSuiteTests
 {
@@ -41,6 +43,22 @@ namespace NetSuiteTests
 			customerInfo.LastName.Should().BeNullOrWhiteSpace();
 			customerInfo.Phone.Should().NotBeNullOrWhiteSpace();
 			customerInfo.Email.Should().NotBeNullOrWhiteSpace();
+		}
+
+		[ Test ]
+		//Slow, ~1 minute
+		public async Task GetCustomersInfoByIdsAsync_HandlesBatchOfOver1000()
+		{
+			var customersIds = new string[ 1005 ];
+			var random = new Random( DateTime.Now.Millisecond );
+			for ( var i = 0; i < 1005; i++)
+			{
+				customersIds[ i ] = random.Next( 1000 ).ToString();
+			}
+
+			var result = await this._customersService.GetCustomersInfoByIdsAsync( customersIds, CancellationToken.None );
+
+			result.Should().NotBeNull();
 		}
 	}
 }

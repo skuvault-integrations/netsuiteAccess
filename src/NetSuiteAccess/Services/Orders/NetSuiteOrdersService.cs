@@ -89,7 +89,7 @@ namespace NetSuiteAccess.Services.Orders
 		public async Task< IEnumerable< NetSuiteSalesOrder > > GetSalesOrdersAsync( DateTime startDateUtc, DateTime endDateUtc, CancellationToken token )
 		{
 			var modifiedOrders = ( await _soapService.GetModifiedSalesOrdersAsync( startDateUtc, endDateUtc, token ).ConfigureAwait( false ) ).ToArray();
-			var customers = await this._customersService.GetCustomersInfoByIdsAsync( modifiedOrders.Select( c => c.Customer.Id.ToString() ).Distinct().ToArray(), token ).ConfigureAwait( false );
+			var customers = ( await this._customersService.GetCustomersInfoByIdsAsync( modifiedOrders.Select( c => c.Customer.Id.ToString() ).Distinct().ToArray(), token ).ConfigureAwait( false ) ).ToList();
 			foreach( var order in modifiedOrders )
 			{
 				order.Customer = customers.FirstOrDefault( c => c.Id == order.Customer.Id );
