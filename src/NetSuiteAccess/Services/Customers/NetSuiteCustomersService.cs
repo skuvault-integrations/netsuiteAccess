@@ -49,7 +49,7 @@ namespace NetSuiteAccess.Services.Customers
 				customers.AddRange( await _soapService.GetCustomersByIdsAsync( customerIdsBatch, token ).ConfigureAwait( false ) );
 			}
 
-			return customers.Any() ? customers.Select( c => c.ToSVCustomer() ) : null;
+			return customers.Select( c => c.ToSVCustomer() );
 		}
 	}
 }
