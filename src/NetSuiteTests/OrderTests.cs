@@ -34,7 +34,7 @@ namespace NetSuiteTests
 		[ Test ]
 		public void GetModifiedSalesOrdersByPage()
 		{
-			Config.OrdersPageSize = 1;
+			Config.SearchRecordsPageSize = 5;
 			var salesOrders = this._ordersService.GetSalesOrdersAsync( DateTime.UtcNow.AddMonths( -1 ), DateTime.UtcNow, CancellationToken.None ).Result;
 			salesOrders.Count().Should().BeGreaterThan( 0 );
 		}
@@ -49,7 +49,7 @@ namespace NetSuiteTests
 		[ Test ]
 		public void GetModifiedPurchaseOrdersByPage()
 		{
-			Config.OrdersPageSize = 1;
+			Config.SearchRecordsPageSize = 5;
 			var purchaseOrders = this._ordersService.GetPurchaseOrdersAsync( DateTime.UtcNow.AddMonths( -1 ), DateTime.UtcNow, CancellationToken.None ).Result;
 			purchaseOrders.Count().Should().BeGreaterThan( 0 );
 		}

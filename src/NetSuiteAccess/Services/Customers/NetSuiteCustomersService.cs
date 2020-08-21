@@ -4,8 +4,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using NetSuiteAccess.Configuration;
 using NetSuiteAccess.Models;
-using NetSuiteAccess.Models.Commands;
 using NetSuiteAccess.Services.Soap;
+using NetSuiteAccess.Shared;
+using NetSuiteSoapWS;
 
 namespace NetSuiteAccess.Services.Customers
 {
@@ -27,7 +28,7 @@ namespace NetSuiteAccess.Services.Customers
 
 		public async Task< NetSuiteCustomer > GetCustomerInfoByIdAsync( string customerId, CancellationToken token )
 		{
-			var customers = await this.GetCustomersInfoByIdsAsync( new string[] { customerId }, token ).ConfigureAwait( false );
+			var customers = await this.GetCustomersInfoByIdsAsync( new [] { customerId }, token ).ConfigureAwait( false );
 
 			return customers?.FirstOrDefault();
 		}
@@ -41,14 +42,14 @@ namespace NetSuiteAccess.Services.Customers
 		/// <returns></returns>
 		public async Task< IEnumerable< NetSuiteCustomer > > GetCustomersInfoByIdsAsync( string[] customersIds, CancellationToken token )
 		{
-			var customers = await _soapService.GetCustomersByIdsAsync( customersIds, token ).ConfigureAwait( false );
-
-			if ( customers != null && customers.Any() )
+			var customers = new List< Customer >();
+			var customerIdsBatches = customersIds.SplitToPieces( NetSuiteConfig.GetCustomersByIdsPageSize );
+			foreach ( var customerIdsBatch in customerIdsBatches )
 			{
-				return customers.Select( c => c.ToSVCustomer() );
+				customers.AddRange( await _soapService.GetCustomersByIdsAsync( customerIdsBatch, token ).ConfigureAwait( false ) );
 			}
-			
-			return null;
+
+			return customers.Select( c => c.ToSVCustomer() );
 		}
 	}
 }
