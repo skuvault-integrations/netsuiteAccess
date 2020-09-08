@@ -3,6 +3,7 @@ using NetSuiteAccess.Exceptions;
 using Polly;
 using System;
 using System.Net.Http;
+using System.ServiceModel;
 using System.Threading.Tasks;
 
 namespace NetSuiteAccess.Throttling
@@ -56,7 +57,8 @@ namespace NetSuiteAccess.Throttling
 						if ( extraLogInfo != null )
 							exceptionDetails = extraLogInfo();
 
-						if ( exception is HttpRequestException )
+						if ( exception is HttpRequestException 
+							|| exception is ServerTooBusyException )
 							netsuiteException = new NetSuiteNetworkException( exceptionDetails, exception );
 						else
 						{

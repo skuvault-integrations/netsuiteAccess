@@ -374,5 +374,27 @@ namespace NetSuiteTests
 			var items = this._itemsService.GetItemsCreatedUpdatedAfterAsync( createOrModifiedDate, true, CancellationToken.None, Mark.Blank() ).Result;
 			items.Count().Should().Be( 0 );
 		}
+
+		[ Test ]
+		[ Ignore( "Run only manually. This test can overload destination server." ) ]
+		public void GivenHugeAmountOfSkus_WhenGetItemBySkuAsyncCalledForEachSku_ThenServerTooBusyExceptionsShouldBeRetried()
+		{
+			var soapService = new NetSuiteSoapService( this.Config );
+			var skus = new List< string >();
+			var totalSkus = 500;
+
+			for (int i = 1; i <= totalSkus; i++)
+			{
+				skus.Add( "testSku-" + i );
+			}
+
+			Assert.DoesNotThrowAsync( async () =>
+			{
+				foreach (var sku in skus)
+				{
+					await soapService.GetItemBySkuAsync( sku, CancellationToken.None );
+				}
+			} );
+		}
 	}
 }
