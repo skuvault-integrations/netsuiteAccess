@@ -59,11 +59,13 @@ namespace NetSuiteAccess.Throttling
 
 						if ( exception is HttpRequestException 
 							|| exception is ServerTooBusyException )
+							// wrap exception to retry funcToThrottle using policy
 							netsuiteException = new NetSuiteNetworkException( exceptionDetails, exception );
 						else
 						{
 							netsuiteException = new NetSuiteException( exceptionDetails, exception );
-							onException?.Invoke(netsuiteException);
+							// log exception details
+							onException?.Invoke( netsuiteException );
 						}
 
 						throw netsuiteException;
