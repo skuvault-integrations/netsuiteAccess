@@ -11,8 +11,8 @@
     <RepositoryUrl>https://github.com/skuvault/netsuiteAccess</RepositoryUrl>
     <Version>1.6.5.0</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>1.6.5.0</AssemblyVersion>
-    <FileVersion>1.6.5.0</FileVersion>
+    <AssemblyVersion>1.6.6.0</AssemblyVersion>
+    <FileVersion>1.6.6.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

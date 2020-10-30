@@ -42,7 +42,7 @@ namespace NetSuiteTests
 		[ Test ]
 		public void GetModifiedPurchaseOrders()
 		{
-			var purchaseOrders = this._ordersService.GetPurchaseOrdersAsync( DateTime.UtcNow.AddMonths( -1 ), DateTime.UtcNow, CancellationToken.None ).Result;
+			var purchaseOrders = this._ordersService.GetPurchaseOrdersAsync( DateTime.UtcNow.AddDays( -14 ), DateTime.UtcNow, CancellationToken.None ).Result;
 			purchaseOrders.Count().Should().BeGreaterThan( 0 );
 		}
 
