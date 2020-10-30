@@ -3,6 +3,7 @@ using NetSuiteAccess.Exceptions;
 using Polly;
 using System;
 using System.Net.Http;
+using System.ServiceModel;
 using System.Threading.Tasks;
 
 namespace NetSuiteAccess.Throttling
@@ -56,12 +57,15 @@ namespace NetSuiteAccess.Throttling
 						if ( extraLogInfo != null )
 							exceptionDetails = extraLogInfo();
 
-						if ( exception is HttpRequestException )
+						if ( exception is HttpRequestException 
+							|| exception is ServerTooBusyException )
+							// wrap exception to retry funcToThrottle using policy
 							netsuiteException = new NetSuiteNetworkException( exceptionDetails, exception );
 						else
 						{
 							netsuiteException = new NetSuiteException( exceptionDetails, exception );
-							onException?.Invoke(netsuiteException);
+							// log exception details
+							onException?.Invoke( netsuiteException );
 						}
 
 						throw netsuiteException;
