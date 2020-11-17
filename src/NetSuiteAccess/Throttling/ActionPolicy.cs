@@ -51,6 +51,9 @@ namespace NetSuiteAccess.Throttling
 					}
 					catch ( Exception exception )
 					{
+						if ( exception is NetSuiteNetworkException )
+							throw exception;
+
 						NetSuiteException netsuiteException = null;
 						var exceptionDetails = string.Empty;
 
