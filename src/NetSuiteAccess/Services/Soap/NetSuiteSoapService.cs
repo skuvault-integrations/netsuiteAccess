@@ -882,7 +882,7 @@ namespace NetSuiteAccess.Services.Soap
 						pageSizeSpecified = true
 					};
 
-					searchResponse = await this._service.searchAsync( null, this._passport, null, null, searchPreferences, searchRecord );
+					searchResponse = await this._service.searchAsync( null, this._passport, null, null, searchPreferences, searchRecord ).ConfigureAwait( false );
 				}
 				catch( TimeoutException ex )
 				{
@@ -933,7 +933,7 @@ namespace NetSuiteAccess.Services.Soap
 							pageSize = currentPageSize,
 							pageSizeSpecified = true
 						};
-						pageResponse = await this._service.searchMoreWithIdAsync( null, this._passport, null, null, searchPreferences, searchId, pageIndex );
+						pageResponse = await this._service.searchMoreWithIdAsync( null, this._passport, null, null, searchPreferences, searchId, pageIndex ).ConfigureAwait( false );
 					}
 					catch( TimeoutException ex )
 					{
