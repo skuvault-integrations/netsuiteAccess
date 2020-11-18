@@ -889,8 +889,9 @@ namespace NetSuiteAccess.Services.Soap
 					if ( currentPageSize == 1 )
 						throw ex;
 
-					currentPageSize = PageAdjuster.GetHalfPageSize( currentPageSize );
-					throw new NetSuiteNetworkException( string.Empty, ex );
+					var prevPageSize = currentPageSize;
+					currentPageSize = PageAdjuster.GetHalfPageSize( prevPageSize );
+					throw new NetSuiteNetworkException( string.Format( "NetSuite server is unable to return entities page using page size {0} with timeout {1} ms! Page size will be decreased to {2}", prevPageSize, _config.NetworkOptions.RequestTimeoutMs, currentPageSize ), ex );
 				}
 
 				return searchResponse;
@@ -944,7 +945,7 @@ namespace NetSuiteAccess.Services.Soap
 						currentPageSize = PageAdjuster.GetHalfPageSize( currentPageSize );
 						pageIndex = PageAdjuster.GetNextPageIndex( prevPageInfo, currentPageSize );
 
-						throw new NetSuiteNetworkException( string.Empty, ex );
+						throw new NetSuiteNetworkException( string.Format( "NetSuite server is unable to return entities page {0} using page size {1} with timeout {2} ms! New page index will be {3}, new page size will decreased to {4}.", prevPageInfo.Index, prevPageInfo.Size, _config.NetworkOptions.RequestTimeoutMs, pageIndex, currentPageSize ), ex );
 					}
 
 					return pageResponse;

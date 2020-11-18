@@ -11,7 +11,7 @@ namespace NetSuiteTests
 		private const int MinPageSize = 1;
 
 		[ Test ]
-		public void GivenPageWithDefaultSize_WhenGetHalfPageCalled_ThenHalfPageSizeIsReturned()
+		public void GivenPageWithDefaultPageSize_WhenGetHalfPageSizeIsCalled_ThenHalfPageSizeIsReturned()
 		{
 			var currentPageSize = DefaultPageSize;
 			var newPageSize = PageAdjuster.GetHalfPageSize( currentPageSize );
@@ -19,7 +19,7 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
-		public void GivenPageWithMinPage_WhenGetHalfPageCalled_ThenSamePageSizeIsReturned()
+		public void GivenPageWithMinPageSize_WhenGetHalfPageSizeIsCalled_ThenSamePageSizeIsReturned()
 		{
 			var currentPageSize = 1;
 			var newPageSize = PageAdjuster.GetHalfPageSize( currentPageSize );
@@ -27,7 +27,7 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
-		public void GivenFirstPageWithHalfPageExpected_WhenGetNextPageIndexCalled_ThenNextPageIndexIsTheSame()
+		public void GivenPageWithFirstIndex_WhenGetNextPageIndexWithDecreasedPageSizeTwiceIsCalled_ThenNextPageIndexIsTheSame()
 		{
 			var firstPageIndex = 1;
 			var newPageIndex = PageAdjuster.GetNextPageIndex( new PageInfo( firstPageIndex, DefaultPageSize ), 125 );
@@ -35,7 +35,7 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
-		public void GivenPageWithHalfPageExpected_WhenGetNextPageIndexCalled_ThenNextPageIndexIsRecalculatedCorrectly()
+		public void GivenPageWithIndexHigherThanFirst_WhenGetNextPageIndexWithDecreasedPageSizeTwiceIsCalled_ThenNextPageIndexIsRecalculatedCorrectly()
 		{
 			var currentPageIndex = 5;
 			var newPageIndex = PageAdjuster.GetNextPageIndex( new PageInfo( currentPageIndex, DefaultPageSize ), 125 );
@@ -43,11 +43,12 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
-		public void GivenPageWithHalfPageExpectedAndNotDefaultCurrentPage_WhenGetNextPageIndexCalled_ThenNextPageIndexIsRecalculatedCorrectly()
+		public void GivenPageWithDecreasedTwiceDefaultPageSize_WhenGetNextPageIndexWithDecreasedPageSizeTwiceIsCalled_ThenNextPageIndexIsCalculatedCorrectly()
 		{
 			var currentPageIndex = 5;
-			var currentPageSize = 125;
-			var newPageIndex = PageAdjuster.GetNextPageIndex( new PageInfo( currentPageIndex, currentPageSize ), 62 );
+			var currentPageSize = DefaultPageSize / 2;
+			var halfPageSize = currentPageSize / 2;
+			var newPageIndex = PageAdjuster.GetNextPageIndex( new PageInfo( currentPageIndex, currentPageSize ), halfPageSize );
 			newPageIndex.Should().Be( currentPageIndex * 2 - 1 );
 		}
 	}
