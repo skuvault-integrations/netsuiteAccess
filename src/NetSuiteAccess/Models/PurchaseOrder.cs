@@ -30,7 +30,7 @@ namespace NetSuiteAccess.Models
 	{
 		Unknown,
 		PendingReceipt,
-		PendingBill,
+		PendingBilling,
 		PartiallyReceived,
 		PendingBillingPartiallyReceived,
 		FullyBilled,
@@ -48,7 +48,7 @@ namespace NetSuiteAccess.Models
 			PurchaseOrderStatuses = new Dictionary< string, NetSuitePurchaseOrderStatus >()
 			{
 				{ "Pending Receipt", NetSuitePurchaseOrderStatus.PendingReceipt },
-				{ "Pending Bill", NetSuitePurchaseOrderStatus.PendingBill },
+				{ "Pending Billing", NetSuitePurchaseOrderStatus.PendingBilling },
 				{ "Partially Received", NetSuitePurchaseOrderStatus.PartiallyReceived },
 				{ "Pending Billing/Partially Received", NetSuitePurchaseOrderStatus.PendingBillingPartiallyReceived },
 				{ "Fully Billed", NetSuitePurchaseOrderStatus.FullyBilled },
