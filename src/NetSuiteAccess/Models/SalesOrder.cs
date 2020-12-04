@@ -20,6 +20,10 @@ namespace NetSuiteAccess.Models
 		public NetSuiteSalesOrderStatus Status { get; set; }
 		public NetSuiteCustomer Customer { get; set; }
 		public NetSuiteSalesOrderItem[] Items { get; set; }
+		public decimal DiscountTotal { get; set; }
+		public decimal TaxTotal { get; set; }
+		public string DiscountName { get; set; }
+		public NetSuiteDiscountTypeEnum DiscountType { get; set; }
 	}
 
 	public class NetSuiteSalesOrderItem
@@ -27,7 +31,7 @@ namespace NetSuiteAccess.Models
 		public string Sku { get; set; }
 		public int Quantity { get; set; }
 		public decimal UnitPrice { get; set; }
-		public decimal Tax { get; set; }
+		public decimal TaxAmount { get; set; }	//Always returns 0, even if the item is taxable, has a tax code in the order and the order itself shows tax
 		public decimal TaxRate { get; set; }
 	}
 
@@ -141,7 +145,11 @@ namespace NetSuiteAccess.Models
 				CreatedDateUtc = order.createdDate.ToUniversalTime(),
 				ModifiedDateUtc = order.lastModifiedDate.ToUniversalTime(),
 				Status = GetSalesOrderStatus( order.status ),
-				Total = (decimal)order.total
+				Total = (decimal)order.total,
+				DiscountName = order.discountItem?.name,
+				DiscountTotal = ( decimal )order.discountTotal,
+				DiscountType = order.discountRate.ToDiscountType(),
+				TaxTotal = ( decimal )order.taxTotal
 			};
 
 			if ( !string.IsNullOrWhiteSpace( order.source ) 
@@ -178,13 +186,13 @@ namespace NetSuiteAccess.Models
 			{
 				foreach( var itemInfo in order.itemList.item )
 				{
-					items.Add( new NetSuiteSalesOrderItem()
+					items.Add( new NetSuiteSalesOrderItem
 					{
 						Quantity = (int)Math.Floor( itemInfo.quantity ),
 						Sku = itemInfo.item != null ? itemInfo.item.name : string.Empty,
 						UnitPrice = GetOrderLineItemUnitPrice( itemInfo ),
 						TaxRate = (decimal)itemInfo.taxRate1,
-						Tax = (decimal)itemInfo.taxAmount
+						TaxAmount = (decimal)itemInfo.taxAmount
 					} );
 				}
 			}
@@ -196,6 +204,13 @@ namespace NetSuiteAccess.Models
 			};
 
 			return svOrder;
+		}
+
+		public static NetSuiteDiscountTypeEnum ToDiscountType( this string discountRate )
+		{
+			if ( string.IsNullOrWhiteSpace( discountRate ) )
+				return NetSuiteDiscountTypeEnum.Undefined;
+			return discountRate.Contains( "%" ) ? NetSuiteDiscountTypeEnum.Percentage : NetSuiteDiscountTypeEnum.FixedAmount;
 		}
 
 		private static decimal GetOrderLineItemUnitPrice( NetSuiteSoapWS.SalesOrderItem saleOrderItem )
