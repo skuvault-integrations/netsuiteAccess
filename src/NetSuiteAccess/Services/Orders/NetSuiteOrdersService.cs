@@ -104,7 +104,7 @@ namespace NetSuiteAccess.Services.Orders
 		/// <param name="order">Sales order</param>
 		/// <param name="token">Cancellation token</param>
 		/// <returns></returns>
-		public async Task CreateSalesOrderAsync( NetSuiteSalesOrder order, string locationName, CancellationToken token )
+		public async Task CreateSalesOrderAsync( NetSuiteSalesOrder order, string locationName, CancellationToken token, bool createCustomer = false )
 		{
 			var location = await this.GetLocationByNameAsync( locationName, token ).ConfigureAwait( false );
 
@@ -117,8 +117,20 @@ namespace NetSuiteAccess.Services.Orders
 
 			if ( customer == null )
 			{
-				NetSuiteLogger.LogTrace( string.Format( "Can't create sales order in NetSuite! Customer with email {0} was not found!", order.Customer.Email ) );
-				return;
+				if ( !createCustomer )
+				{
+					NetSuiteLogger.LogTrace( string.Format( "Can't create sales order in NetSuite! Customer with email {0} was not found!", order.Customer.Email ) );
+					return;
+				}
+
+				if ( string.IsNullOrWhiteSpace( order.Customer.FirstName )
+					|| string.IsNullOrWhiteSpace( order.Customer.LastName ) )
+				{
+					NetSuiteLogger.LogTrace( "Can't create sales order in NetSuite! Customer's first name or last name aren't specified!" );
+					return;
+				}
+
+				customer = await this._soapService.CreateCustomerAsync( order.Customer, token ).ConfigureAwait( false );
 			}
 
 			await this._soapService.CreateSalesOrderAsync( order, location.Id, customer.Id, token ).ConfigureAwait( false );

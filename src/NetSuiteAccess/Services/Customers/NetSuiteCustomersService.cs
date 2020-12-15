@@ -51,5 +51,10 @@ namespace NetSuiteAccess.Services.Customers
 
 			return customers.Select( c => c.ToSVCustomer() );
 		}
+
+		public System.Threading.Tasks.Task< NetSuiteCustomer > CreateCustomerAsync( NetSuiteCustomer customer, CancellationToken token )
+		{
+			return this._soapService.CreateCustomerAsync( customer, token );
+		}
 	}
 }
