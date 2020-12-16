@@ -11,6 +11,6 @@ namespace NetSuiteAccess.Services.Customers
 		Task< IEnumerable< NetSuiteCustomer > > GetCustomersInfoByIdsAsync( string[] customersIds, CancellationToken token );
 		Task< NetSuiteCustomer > GetCustomerInfoByIdAsync( string customerId, CancellationToken token );
 		Task< NetSuiteCustomer > GetCustomerInfoByEmailAsync( string email, CancellationToken token );
-		Task< NetSuiteCustomer > CreateCustomerAsync( NetSuiteCustomer customer, CancellationToken token );
+		Task< NetSuiteCustomer > CreateCustomerAsync( NetSuiteCustomer customer, CancellationToken token, Mark mark = null );
 	}
 }

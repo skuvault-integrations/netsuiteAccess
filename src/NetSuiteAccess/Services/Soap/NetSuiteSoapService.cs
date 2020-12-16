@@ -386,10 +386,8 @@ namespace NetSuiteAccess.Services.Soap
 		/// </summary>
 		/// <param name="customer"></param>
 		/// <param name="mark"></param>
-		public async Task< NetSuiteCustomer > CreateCustomerAsync( NetSuiteCustomer customer, CancellationToken cancellationToken )
+		public async Task< NetSuiteCustomer > CreateCustomerAsync( NetSuiteCustomer customer, CancellationToken cancellationToken, Mark mark )
 		{
-			var mark = Mark.CreateNew();
-
 			var newCustomerRecord = new NetSuiteSoapWS.Customer()
 			{
 				firstName = customer.FirstName,
@@ -433,7 +431,7 @@ namespace NetSuiteAccess.Services.Soap
 			{
 				if ( response.writeResponse.status.statusDetail[0].code == StatusDetailCodeType.UNIQUE_CUST_ID_REQD )
 				{
-					var existingCustomer = await GetCustomerByFirstAndLastName( customer.FirstName, customer.LastName, cancellationToken ).ConfigureAwait( false );
+					var existingCustomer = await GetCustomerByFirstAndLastName( customer.FirstName, customer.LastName, cancellationToken, mark ).ConfigureAwait( false );
 					if ( existingCustomer == null )
 						throw new NetSuiteException( string.Format( "Can't find existing customer by first name {0} and last name {1}", customer.FirstName, customer.LastName ) );
 
@@ -522,13 +520,11 @@ namespace NetSuiteAccess.Services.Soap
 			return response.OfType< Customer >().FirstOrDefault();
 		}
 
-		public async Task< Customer > GetCustomerByFirstAndLastName( string firstName, string lastName, CancellationToken cancellationToken )
+		public async Task< Customer > GetCustomerByFirstAndLastName( string firstName, string lastName, CancellationToken cancellationToken, Mark mark )
 		{
 			if ( string.IsNullOrWhiteSpace( firstName ) 
 				|| string.IsNullOrWhiteSpace( lastName ) )
 				return null;
-
-			var mark = Mark.CreateNew();
 
 			if ( cancellationToken.IsCancellationRequested )
 			{
@@ -1121,10 +1117,8 @@ namespace NetSuiteAccess.Services.Soap
 		/// <param name="order">Sales order</param>
 		/// <param name="cancellationToken">Cancellation token</param>
 		/// <returns></returns>
-		public async System.Threading.Tasks.Task CreateSalesOrderAsync( NetSuiteSalesOrder order, long locationId, string customerId, CancellationToken cancellationToken )
+		public async System.Threading.Tasks.Task CreateSalesOrderAsync( NetSuiteSalesOrder order, long locationId, string customerId, CancellationToken cancellationToken, Mark mark )
 		{
-			var mark = Mark.CreateNew();
-
 			if ( cancellationToken.IsCancellationRequested )
 			{
 				var exceptionDetails = CallInfo.CreateInfo( mark: mark, additionalInfo: this.AdditionalLogInfo() );

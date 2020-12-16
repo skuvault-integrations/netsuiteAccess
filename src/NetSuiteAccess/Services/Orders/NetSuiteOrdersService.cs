@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Netco.Logging;
 using NetSuiteAccess.Configuration;
 using NetSuiteAccess.Exceptions;
 using NetSuiteAccess.Models;
@@ -106,6 +107,7 @@ namespace NetSuiteAccess.Services.Orders
 		/// <returns></returns>
 		public async Task CreateSalesOrderAsync( NetSuiteSalesOrder order, string locationName, CancellationToken token, bool createCustomer = false )
 		{
+			var mark = Mark.CreateNew();
 			var location = await this.GetLocationByNameAsync( locationName, token ).ConfigureAwait( false );
 
 			if ( location == null )
@@ -130,10 +132,10 @@ namespace NetSuiteAccess.Services.Orders
 					return;
 				}
 
-				customer = await this._soapService.CreateCustomerAsync( order.Customer, token ).ConfigureAwait( false );
+				customer = await this._soapService.CreateCustomerAsync( order.Customer, token, mark ).ConfigureAwait( false );
 			}
 
-			await this._soapService.CreateSalesOrderAsync( order, location.Id, customer.Id, token ).ConfigureAwait( false );
+			await this._soapService.CreateSalesOrderAsync( order, location.Id, customer.Id, token, mark ).ConfigureAwait( false );
 		}
 
 		/// <summary>
