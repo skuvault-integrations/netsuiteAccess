@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using NetSuiteAccess;
+using NetSuiteAccess.Exceptions;
 using NetSuiteAccess.Models;
 using NetSuiteAccess.Services.Orders;
 using NUnit.Framework;
@@ -42,7 +43,7 @@ namespace NetSuiteTests
 		[ Test ]
 		public void GetModifiedPurchaseOrders()
 		{
-			var purchaseOrders = this._ordersService.GetPurchaseOrdersAsync( DateTime.UtcNow.AddMonths( -1 ), DateTime.UtcNow, CancellationToken.None ).Result;
+			var purchaseOrders = this._ordersService.GetPurchaseOrdersAsync( DateTime.UtcNow.AddDays( -14 ), DateTime.UtcNow, CancellationToken.None ).Result;
 			purchaseOrders.Count().Should().BeGreaterThan( 0 );
 		}
 
@@ -52,6 +53,18 @@ namespace NetSuiteTests
 			Config.SearchRecordsPageSize = 5;
 			var purchaseOrders = this._ordersService.GetPurchaseOrdersAsync( DateTime.UtcNow.AddMonths( -1 ), DateTime.UtcNow, CancellationToken.None ).Result;
 			purchaseOrders.Count().Should().BeGreaterThan( 0 );
+		}
+
+		[ Test ]
+		public void GivenHugeDefaultPurchaseOrdersPageSize_WhenGetPurchaseOrdersAsyncIsCalled_ThenExceptionIsNotExpected()
+		{
+			Config.SearchPurchaseOrdersPageSize = 200;
+
+			var ex = Assert.Throws< NetSuiteException >( () =>
+			{
+				this._ordersService.GetPurchaseOrdersAsync( DateTime.UtcNow.AddDays( -14 ), DateTime.UtcNow, CancellationToken.None ).Wait();
+			} );
+			ex.Should().BeNull();
 		}
 
 		[ Test ]

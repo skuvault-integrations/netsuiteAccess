@@ -808,12 +808,12 @@ namespace NetSuiteAccess.Services.Soap
 			{
 				lastModifiedDate = new SearchDateField()
 				{
-						@operator = SearchDateFieldOperator.within,
-						operatorSpecified = true,
-						searchValue = startDateUtc.ToUniversalTime(),
-						searchValueSpecified = true,
-						searchValue2 = endDateUtc.ToUniversalTime(),
-						searchValue2Specified = true
+					@operator = SearchDateFieldOperator.within,
+					operatorSpecified = true,
+					searchValue = startDateUtc.ToUniversalTime(),
+					searchValueSpecified = true,
+					searchValue2 = endDateUtc.ToUniversalTime(),
+					searchValue2Specified = true
 				},
 				recordType = new SearchStringField()
 				{
@@ -823,7 +823,7 @@ namespace NetSuiteAccess.Services.Soap
 				},
 			};
 
-			var response = await this.SearchRecords( purchaseOrdersSearchRequest, mark, cancellationToken ).ConfigureAwait( false );
+			var response = await this.SearchRecords( purchaseOrdersSearchRequest, mark, cancellationToken, _config.SearchPurchaseOrdersPageSize ).ConfigureAwait( false );
 			return response.OfType< NetSuiteSoapWS.PurchaseOrder >().Select( p => p.ToSVPurchaseOrder() );
 		}
 
@@ -864,19 +864,38 @@ namespace NetSuiteAccess.Services.Soap
 			return response.OfType< NetSuiteSoapWS.SalesOrder >().Select( p => p.ToSVSalesOrder() );
 		}
 
-		private async Task< IEnumerable< Record > > SearchRecords( SearchRecord searchRecord, Mark mark, CancellationToken cancellationToken )
+		private async Task< IEnumerable< Record > > SearchRecords( SearchRecord searchRecord, Mark mark, CancellationToken cancellationToken, int? pageSize = null )
 		{
 			var result = new List< Record >();
-			var response = await this.ThrottleRequestAsync( mark, ( token ) =>
+			var currentPageSize = pageSize ?? _config.SearchRecordsPageSize;
+			
+			var response = await this.ThrottleRequestAsync( mark, async ( token ) =>
 			{
-				var searchPreferences = new SearchPreferences
+				searchResponse searchResponse = null;
+				
+				try
 				{
-					bodyFieldsOnly = false,
-					pageSize = _config.SearchRecordsPageSize,
-					pageSizeSpecified = true
-				};
+					var searchPreferences = new SearchPreferences
+					{
+						bodyFieldsOnly = false,
+						pageSize = currentPageSize,
+						pageSizeSpecified = true
+					};
 
-				return this._service.searchAsync( null, this._passport, null, null, searchPreferences, searchRecord );
+					searchResponse = await this._service.searchAsync( null, this._passport, null, null, searchPreferences, searchRecord ).ConfigureAwait( false );
+				}
+				catch( TimeoutException ex )
+				{
+					if ( currentPageSize == 1 )
+						throw ex;
+
+					var prevPageSize = currentPageSize;
+					currentPageSize = PageAdjuster.GetHalfPageSize( prevPageSize );
+					throw new NetSuiteNetworkException( string.Format( "NetSuite server is unable to return entities page using page size {0} with timeout {1} ms! Page size will be decreased to {2}", prevPageSize, _config.NetworkOptions.RequestTimeoutMs, currentPageSize ), ex );
+				}
+
+				return searchResponse;
+				
 			}, searchRecord.ToJson(), cancellationToken ).ConfigureAwait( false );
 
 			var searchResult = response.searchResult;
@@ -886,7 +905,7 @@ namespace NetSuiteAccess.Services.Soap
 
 				if ( searchResult.totalPages > 1 )
 				{
-					result.AddRange( await this.CollectDataFromExtraPages< Record >( searchResult.searchId, searchResult.totalPages ).ConfigureAwait( false ) );
+					result.AddRange( await this.CollectDataFromExtraPages< Record >( searchResult.searchId, searchResult.totalPages, currentPageSize, cancellationToken, mark ).ConfigureAwait( false ) );
 				}
 
 				return result;
@@ -895,14 +914,46 @@ namespace NetSuiteAccess.Services.Soap
 			throw new NetSuiteException( response.searchResult.status.statusDetail[0].message );
 		}
 
-		private async Task< IEnumerable< T > > CollectDataFromExtraPages< T >( string searchId, int totalPages )
+		private async Task< IEnumerable< T > > CollectDataFromExtraPages< T >( string searchId, int totalPages, int pageSize, CancellationToken cancellationToken, Mark mark )
 		{
 			var result = new List< T >();
 			int pageIndex = 2;
+			int currentPageSize = pageSize;
+
 			while ( pageIndex <= totalPages )
 			{
-				var searchMoreResponse = await this._service.searchMoreWithIdAsync( null, this._passport, null, null, null, searchId, pageIndex ).ConfigureAwait( false );
+				var searchMoreResponse = await this.ThrottleRequestAsync( mark, async ( token ) =>
+				{
+					searchMoreWithIdResponse pageResponse = null;
+
+					try
+					{
+						var searchPreferences = new SearchPreferences()
+						{
+							pageSize = currentPageSize,
+							pageSizeSpecified = true
+						};
+						pageResponse = await this._service.searchMoreWithIdAsync( null, this._passport, null, null, searchPreferences, searchId, pageIndex ).ConfigureAwait( false );
+					}
+					catch( TimeoutException ex )
+					{
+						if ( currentPageSize == 1 )
+							throw ex;
+
+						// decrease page size and change page index
+						var prevPageInfo = new PageInfo( pageIndex, currentPageSize );
+						currentPageSize = PageAdjuster.GetHalfPageSize( currentPageSize );
+						pageIndex = PageAdjuster.GetNextPageIndex( prevPageInfo, currentPageSize );
+
+						throw new NetSuiteNetworkException( string.Format( "NetSuite server is unable to return entities page {0} using page size {1} with timeout {2} ms! New page index will be {3}, new page size will decreased to {4}.", prevPageInfo.Index, prevPageInfo.Size, _config.NetworkOptions.RequestTimeoutMs, pageIndex, currentPageSize ), ex );
+					}
+
+					return pageResponse;
+
+				}, searchId, cancellationToken ).ConfigureAwait( false );
+				
 				++pageIndex;
+				totalPages = searchMoreResponse.searchResult.totalPages;
 
 				if ( !searchMoreResponse.searchResult.status.isSuccess )
 				{

@@ -76,6 +76,7 @@
     <Compile Include="LocationMapperTests.cs" />
     <Compile Include="OrderMapperTests.cs" />
     <Compile Include="OrderTests.cs" />
+    <Compile Include="PageAdjusterTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestCredentials.cs" />
   </ItemGroup>
