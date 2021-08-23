@@ -60,11 +60,11 @@ namespace NetSuiteTests
 		{
 			Config.SearchPurchaseOrdersPageSize = 200;
 
-			var ex = Assert.Throws< NetSuiteException >( () =>
-			{
-				this._ordersService.GetPurchaseOrdersAsync( DateTime.UtcNow.AddDays( -14 ), DateTime.UtcNow, CancellationToken.None ).Wait();
-			} );
-			ex.Should().BeNull();
+			Assert.DoesNotThrow(() => this._ordersService.GetPurchaseOrdersAsync(
+				DateTime.UtcNow.AddDays( -14 ), 
+				DateTime.UtcNow, 
+				CancellationToken.None 
+			).Wait());
 		}
 
 		[ Test ]
@@ -98,6 +98,7 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		// This test can fail if someone creates a product with the sku listed in the test.
 		public async Task CreatePurchaseOrderWhereItemsNotExist()
 		{
 			var docNumber = "PO_" + Guid.NewGuid().ToString();
@@ -109,7 +110,7 @@ namespace NetSuiteTests
 				 {
 					 new NetSuitePurchaseOrderItem()
 					 {
-						Sku = "testsku1",
+						Sku = "DoesNotExist123456",
 						Quantity = 12
 					 }
 				 }, 
@@ -130,9 +131,11 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		// Updates will only be processed for POs with "Pending Receipt" status.
+		// Will have to create new PO to test this if this status has changed.
 		public async Task UpdatePurchaseOrder()
 		{
-			var orderInternalId = "14702";
+			var orderInternalId = "56702";
 			var random = new Random();
 			var purchaseOrder = this.GetOrderByIdAsync( orderInternalId );
 
@@ -156,6 +159,8 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		// This test can fail if the PO has not been modified in the last 2 months.
+		// If needed, updating the memo on the PO will update the LastModified date of the PO.
 		public void AddReceivedQuantityToPurchaseOrderWithoutItemReceipt()
 		{
 			var orderInternalId = "26006";
@@ -170,6 +175,8 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		// This test can fail if the PO has not been modified in the last 2 months.
+		// If needed, updating the memo on the PO will update the LastModified date of the PO.
 		public void AddReceivedQuantityToPurchaseOrderWithItemReceipt()
 		{
 			var orderInternalId = "26100";
@@ -184,6 +191,8 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		// This test can fail if the PO has not been modified in the last 2 months.
+		// If needed, updating the memo on the PO will update the LastModified date of the PO.
 		public void AddAllReceivedQuantityToPurchaseOrderWithItemReceipt()
 		{
 			var orderInternalId = "26100";
@@ -197,9 +206,11 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		// This test can fail if the PO has not been modified in the last 2 months.
+		// If needed, updating the memo on the PO will update the LastModified date of the PO.
 		public void AddReceivedQuantityToPurchaseOrderCreatedFrom()
 		{
-			var orderInternalId = "26105";
+			var orderInternalId = "56502";
 			var random = new Random();
 			var purchaseOrder = this.GetOrderByIdAsync( orderInternalId );
 			purchaseOrder.Items.First().ReceivedQuantity = random.Next( 1, purchaseOrder.Items.First().Quantity - 1 );
@@ -211,6 +222,8 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		// This test can fail if the PO has not been modified in the last 2 months.
+		// If needed, updating the memo on the PO will update the LastModified date of the PO.
 		public void SetZeroReceivedQuantityToPurchaseOrderWithItemReceiptAndNotPendingReceiptStatus()
 		{
 			var orderInternalId = "26005";
@@ -226,12 +239,14 @@ namespace NetSuiteTests
 
 		private NetSuitePurchaseOrder GetOrderByIdAsync( string internalId )
 		{
-			return this._ordersService.GetPurchaseOrdersAsync( DateTime.UtcNow.AddMonths( -2 ), DateTime.UtcNow, CancellationToken.None )
-								.Result
-								.FirstOrDefault( o => o.Id.Equals( internalId ) );
+			var pos = this._ordersService.GetPurchaseOrdersAsync(DateTime.UtcNow.AddMonths(-2), DateTime.UtcNow,
+				CancellationToken.None).Result;
+			var searchedPo = pos.FirstOrDefault( o => o.Id.Equals( internalId ) );
+			return searchedPo;
 		}
 
 		[ Test ]
+		// TODO: Failing test. Related to missing a value for "amountPaid" param. Discovered on GUARD-2073
 		public async Task CreateSalesOrder()
 		{
 			var docNumber = "SO_" + Guid.NewGuid().ToString();
@@ -244,6 +259,7 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		// TODO: Failing test. Related to missing a value for "amountPaid" param. Discovered on GUARD-2073
 		public async Task UpdateSalesOrder()
 		{
 			var docNumber = "SO_" + Guid.NewGuid().ToString();
@@ -261,6 +277,7 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		// TODO: Failing test. Related to missing a value for "amountPaid" param. Discovered on GUARD-2073
 		public async Task UpdateExistingSalesOrder()
 		{
 			var docNumber = "698";
