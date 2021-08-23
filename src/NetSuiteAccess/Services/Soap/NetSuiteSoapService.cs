@@ -1165,15 +1165,15 @@ namespace NetSuiteAccess.Services.Soap
 			var encoding = new ASCIIEncoding();
 			byte[] keyBytes = encoding.GetBytes( key );
 			byte[] baseStringBytes = encoding.GetBytes( baseString );
-			using ( var hmacSha1 = new HMACSHA1( keyBytes ) )
+			using ( var hmacSha256 = new HMACSHA256( keyBytes ) )
 			{
-				byte[] hashBaseString = hmacSha1.ComputeHash( baseStringBytes );
+				byte[] hashBaseString = hmacSha256.ComputeHash( baseStringBytes );
 				signature = Convert.ToBase64String( hashBaseString );
 			}
 			
 			passport.signature = new TokenPassportSignature()
 			{
-				algorithm = "HMAC-SHA1",
+				algorithm = "HMAC-SHA256",
 				Value = signature
 			};
 			

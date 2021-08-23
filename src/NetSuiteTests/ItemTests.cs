@@ -192,6 +192,7 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		// Seems to fail randomly. Try running again a few times if failing.
 		public async Task UpdateSkusQuantitiesAsync_PushingToBins_ItemAndLocationUsesBins_BinIsNotAssociatedWithItem()
 		{
 			int newQuantity = new Random().Next( 1, 100 );
