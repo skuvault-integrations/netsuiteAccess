@@ -60,11 +60,11 @@ namespace NetSuiteTests
 		{
 			Config.SearchPurchaseOrdersPageSize = 200;
 
-			Assert.DoesNotThrow(() => this._ordersService.GetPurchaseOrdersAsync(
+			Assert.DoesNotThrow( () => this._ordersService.GetPurchaseOrdersAsync(
 				DateTime.UtcNow.AddDays( -14 ), 
 				DateTime.UtcNow, 
 				CancellationToken.None 
-			).Wait());
+			).Wait() );
 		}
 
 		[ Test ]
