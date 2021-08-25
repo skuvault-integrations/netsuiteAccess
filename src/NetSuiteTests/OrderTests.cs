@@ -144,7 +144,7 @@ namespace NetSuiteTests
 		// Will have to create new PO to test this if this status has changed.
 		public async Task UpdatePurchaseOrder()
 		{
-			var orderInternalId = "56702";
+			var orderInternalId = "14702";
 			var random = new Random();
 			var purchaseOrder = this.GetOrderByIdAsync( orderInternalId );
 
