@@ -13,12 +13,6 @@ namespace NetSuiteAccess.Models
 		public decimal TaxTotal { get; set; }
 		public string DiscountName { get; set; }
 		public NetSuiteDiscountTypeEnum DiscountType { get; set; }
-		public IEnumerable< NetSuiteSalesOrderFulfillment > Fulfillments { get; set; }
-
-		public NetSuiteSalesOrder()
-		{
-			this.Fulfillments = new List< NetSuiteSalesOrderFulfillment >();
-		}
 	}
 
 	public class NetSuiteSalesOrderItem
