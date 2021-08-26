@@ -255,7 +255,8 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
-		// TODO: Failing test. Related to missing a value for "amountPaid" param. Discovered on GUARD-2073
+		// The owner of our test account can add custom fields and mark them as required, which may break out integration.
+		// May need to update these fields to not be mandatory. Discovered on GUARD-2073.
 		public async Task CreateSalesOrder()
 		{
 			var docNumber = "SO_" + Guid.NewGuid().ToString();
@@ -268,6 +269,8 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		// The owner of our test account can add custom fields and mark them as required, which may break out integration.
+		// May need to update these fields to not be mandatory. Discovered on GUARD-2073.
 		public async Task GivenSalesOrderMadeByNewCustomer_WhenCreateSalesOrderIsCalled_ThenCreatedSalesOrderIsExpected()
 		{
 			var docNumber = "SO_" + Guid.NewGuid().ToString();
@@ -283,6 +286,8 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		// The owner of our test account can add custom fields and mark them as required, which may break out integration.
+		// May need to update these fields to not be mandatory. Discovered on GUARD-2073.
 		public async Task GivenSalesOrderMadeByNewCustomer_WhenCreateSalesOrderIsCalledWithDisabledAutomaticCustomerCreationFeature_ThenExceptionIsExpected()
 		{
 			var docNumber = "SO_" + Guid.NewGuid().ToString();
@@ -299,6 +304,8 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		// The owner of our test account can add custom fields and mark them as required, which may break out integration.
+		// May need to update these fields to not be mandatory. Discovered on GUARD-2073.
 		public async Task GivenSalesOrderMadeByNewCustomerWithSameNameInNetSuiteButDifferentEmail_WhenCreateSalesOrderIsCalled_ThenCreatedSalesOrderIsExpected()
 		{
 			var docNumber = "SO_" + Guid.NewGuid().ToString();
@@ -315,7 +322,8 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
-		// TODO: Failing test. Related to missing a value for "amountPaid" param. Discovered on GUARD-2073
+		// The owner of our test account can add custom fields and mark them as required, which may break out integration.
+		// May need to update these fields to not be mandatory. Discovered on GUARD-2073.
 		public async Task UpdateSalesOrder()
 		{
 			var docNumber = "SO_" + Guid.NewGuid().ToString();
@@ -333,10 +341,12 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
-		// TODO: Failing test. Related to missing a value for "amountPaid" param. Discovered on GUARD-2073
+		// The owner of our test account can add custom fields and mark them as required, which may break out integration.
+		// May need to update these fields to not be mandatory. Discovered on GUARD-2073.
+		// The docNumber may not be found if the SalesOrder is older than 3 months. May need to create a new SalesOrder to confirm this.
 		public async Task UpdateExistingSalesOrder()
 		{
-			var docNumber = "698";
+			var docNumber = "SO_3ff0c230-c373-4448-8bde-bf4dcff9237b";
 			var order = await this.GetRecentlyModifiedSalesOrderByDocNumber( docNumber, DateTime.UtcNow.AddMonths( -3 ) );
 			var newQuantity = new Random().Next( 1, 100 );
 			order.Items.First().Quantity = newQuantity;
