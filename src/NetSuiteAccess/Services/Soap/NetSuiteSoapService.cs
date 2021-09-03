@@ -64,11 +64,11 @@ namespace NetSuiteAccess.Services.Soap
 		{
 			client.Endpoint.Binding.SendTimeout = new TimeSpan( 0, 0, 0, 0, this._config.NetworkOptions.RequestTimeoutMs );
 
-			string subdomain = this._config.Credentials.CustomerId.ToLowerInvariant().Replace("_", "-");
+			string subdomain = this._config.Credentials.CustomerId.ToLowerInvariant().Replace( "_", "-" );
 			client.Endpoint.Address = this.GetDataCenterEndpoint( client, $"https://{ subdomain }.suitetalk.api.netsuite.com" );
 		}
 
-		private EndpointAddress GetDataCenterEndpoint( NetSuitePortTypeClient client, string dataCenter)
+		private EndpointAddress GetDataCenterEndpoint( NetSuitePortTypeClient client, string dataCenter )
 		{
 			var endpoint = client.Endpoint.Address;
 			var relativeWsPath = endpoint.Uri.LocalPath;
@@ -79,7 +79,7 @@ namespace NetSuiteAccess.Services.Soap
 			}
 			else
 			{
-				return new EndpointAddress( string.Concat( dataCenter.Substring( 0, dataCenter.Length - 1), relativeWsPath ) );
+				return new EndpointAddress( string.Concat( dataCenter.Substring( 0, dataCenter.Length - 1 ), relativeWsPath ) );
 			}
 		}
 
@@ -1308,15 +1308,15 @@ namespace NetSuiteAccess.Services.Soap
 			var encoding = new ASCIIEncoding();
 			byte[] keyBytes = encoding.GetBytes( key );
 			byte[] baseStringBytes = encoding.GetBytes( baseString );
-			using ( var hmacSha1 = new HMACSHA1( keyBytes ) )
+			using ( var hmacSha256 = new HMACSHA256( keyBytes ) )
 			{
-				byte[] hashBaseString = hmacSha1.ComputeHash( baseStringBytes );
+				byte[] hashBaseString = hmacSha256.ComputeHash( baseStringBytes );
 				signature = Convert.ToBase64String( hashBaseString );
 			}
 			
 			passport.signature = new TokenPassportSignature()
 			{
-				algorithm = "HMAC-SHA1",
+				algorithm = "HMAC-SHA256",
 				Value = signature
 			};
 			

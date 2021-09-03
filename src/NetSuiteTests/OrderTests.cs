@@ -69,11 +69,11 @@ namespace NetSuiteTests
 		{
 			Config.SearchPurchaseOrdersPageSize = 200;
 
-			var ex = Assert.Throws< NetSuiteException >( () =>
-			{
-				this._ordersService.GetPurchaseOrdersAsync( DateTime.UtcNow.AddDays( -14 ), DateTime.UtcNow, CancellationToken.None ).Wait();
-			} );
-			ex.Should().BeNull();
+			Assert.DoesNotThrow( () => this._ordersService.GetPurchaseOrdersAsync(
+				DateTime.UtcNow.AddDays( -14 ), 
+				DateTime.UtcNow, 
+				CancellationToken.None 
+			).Wait() );
 		}
 
 		[ Test ]
@@ -107,6 +107,7 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		// This test can fail if someone creates a product with the sku listed in the test.
 		public async Task CreatePurchaseOrderWhereItemsNotExist()
 		{
 			var docNumber = "PO_" + Guid.NewGuid().ToString();
@@ -118,7 +119,7 @@ namespace NetSuiteTests
 				 {
 					 new NetSuitePurchaseOrderItem()
 					 {
-						Sku = "testsku1",
+						Sku = "DoesNotExist123456",
 						Quantity = 12
 					 }
 				 }, 
@@ -139,6 +140,8 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		// Updates will only be processed for POs with "Pending Receipt" status.
+		// Will have to create new PO to test this if this status has changed.
 		public async Task UpdatePurchaseOrder()
 		{
 			var orderInternalId = "14702";
@@ -165,6 +168,8 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		// This test can fail if the PO has not been modified in the last 2 months.
+		// If needed, updating the memo on the PO will update the LastModified date of the PO.
 		public void AddReceivedQuantityToPurchaseOrderWithoutItemReceipt()
 		{
 			var orderInternalId = "26006";
@@ -179,6 +184,8 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		// This test can fail if the PO has not been modified in the last 2 months.
+		// If needed, updating the memo on the PO will update the LastModified date of the PO.
 		public void AddReceivedQuantityToPurchaseOrderWithItemReceipt()
 		{
 			var orderInternalId = "26100";
@@ -193,6 +200,8 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		// This test can fail if the PO has not been modified in the last 2 months.
+		// If needed, updating the memo on the PO will update the LastModified date of the PO.
 		public void AddAllReceivedQuantityToPurchaseOrderWithItemReceipt()
 		{
 			var orderInternalId = "26100";
@@ -206,9 +215,11 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		// This test can fail if the PO has not been modified in the last 2 months.
+		// If needed, updating the memo on the PO will update the LastModified date of the PO.
 		public void AddReceivedQuantityToPurchaseOrderCreatedFrom()
 		{
-			var orderInternalId = "26105";
+			var orderInternalId = "56502";
 			var random = new Random();
 			var purchaseOrder = this.GetOrderByIdAsync( orderInternalId );
 			purchaseOrder.Items.First().ReceivedQuantity = random.Next( 1, purchaseOrder.Items.First().Quantity - 1 );
@@ -220,6 +231,8 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		// This test can fail if the PO has not been modified in the last 2 months.
+		// If needed, updating the memo on the PO will update the LastModified date of the PO.
 		public void SetZeroReceivedQuantityToPurchaseOrderWithItemReceiptAndNotPendingReceiptStatus()
 		{
 			var orderInternalId = "26005";
@@ -235,12 +248,15 @@ namespace NetSuiteTests
 
 		private NetSuitePurchaseOrder GetOrderByIdAsync( string internalId )
 		{
-			return this._ordersService.GetPurchaseOrdersAsync( DateTime.UtcNow.AddMonths( -2 ), DateTime.UtcNow, CancellationToken.None )
-								.Result
-								.FirstOrDefault( o => o.Id.Equals( internalId ) );
+			var pos = this._ordersService.GetPurchaseOrdersAsync(DateTime.UtcNow.AddMonths(-2), DateTime.UtcNow,
+				CancellationToken.None).Result;
+			var searchedPo = pos.FirstOrDefault( o => o.Id.Equals( internalId ) );
+			return searchedPo;
 		}
 
 		[ Test ]
+		// The owner of our test account can add custom fields and mark them as required, which may break out integration.
+		// May need to update these fields to not be mandatory. Discovered on GUARD-2073.
 		public async Task CreateSalesOrder()
 		{
 			var docNumber = "SO_" + Guid.NewGuid().ToString();
@@ -253,6 +269,8 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		// The owner of our test account can add custom fields and mark them as required, which may break out integration.
+		// May need to update these fields to not be mandatory. Discovered on GUARD-2073.
 		public async Task GivenSalesOrderMadeByNewCustomer_WhenCreateSalesOrderIsCalled_ThenCreatedSalesOrderIsExpected()
 		{
 			var docNumber = "SO_" + Guid.NewGuid().ToString();
@@ -268,6 +286,8 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		// The owner of our test account can add custom fields and mark them as required, which may break out integration.
+		// May need to update these fields to not be mandatory. Discovered on GUARD-2073.
 		public async Task GivenSalesOrderMadeByNewCustomer_WhenCreateSalesOrderIsCalledWithDisabledAutomaticCustomerCreationFeature_ThenExceptionIsExpected()
 		{
 			var docNumber = "SO_" + Guid.NewGuid().ToString();
@@ -284,6 +304,8 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		// The owner of our test account can add custom fields and mark them as required, which may break out integration.
+		// May need to update these fields to not be mandatory. Discovered on GUARD-2073.
 		public async Task GivenSalesOrderMadeByNewCustomerWithSameNameInNetSuiteButDifferentEmail_WhenCreateSalesOrderIsCalled_ThenCreatedSalesOrderIsExpected()
 		{
 			var docNumber = "SO_" + Guid.NewGuid().ToString();
@@ -300,6 +322,8 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		// The owner of our test account can add custom fields and mark them as required, which may break out integration.
+		// May need to update these fields to not be mandatory. Discovered on GUARD-2073.
 		public async Task UpdateSalesOrder()
 		{
 			var docNumber = "SO_" + Guid.NewGuid().ToString();
@@ -317,9 +341,12 @@ namespace NetSuiteTests
 		}
 
 		[ Test ]
+		// The owner of our test account can add custom fields and mark them as required, which may break out integration.
+		// May need to update these fields to not be mandatory. Discovered on GUARD-2073.
+		// The docNumber may not be found if the SalesOrder is older than 3 months. May need to create a new SalesOrder to confirm this.
 		public async Task UpdateExistingSalesOrder()
 		{
-			var docNumber = "698";
+			var docNumber = "SO_3ff0c230-c373-4448-8bde-bf4dcff9237b";
 			var order = await this.GetRecentlyModifiedSalesOrderByDocNumber( docNumber, DateTime.UtcNow.AddMonths( -3 ) );
 			var newQuantity = new Random().Next( 1, 100 );
 			order.Items.First().Quantity = newQuantity;

@@ -36,7 +36,6 @@ namespace NetSuiteAccess.Shared
 		///	Returns url with OAuth 1.0 query parameters
 		/// </summary>
 		/// <param name="url"></param>
-		/// <param name="methodName"></param>
 		/// <param name="extraRequestParameters"></param>
 		/// <returns></returns>
 		public string GetAuthorizationHeader( string url, HttpMethod httpMethod, Dictionary< string, string > extraRequestParameters = null )
@@ -51,7 +50,6 @@ namespace NetSuiteAccess.Shared
 		/// </summary>
 		/// <param name="url"></param>
 		/// <param name="httpMethod"></param>
-		/// <param name="tokenSecret"></param>
 		/// <param name="extraRequestParameters"></param>
 		/// <returns></returns>
 		public Dictionary< string, string > GetOAuthRequestParameters( string url, HttpMethod httpMethod, Dictionary< string, string > extraRequestParameters )
@@ -61,7 +59,7 @@ namespace NetSuiteAccess.Shared
 			{
 				{ "oauth_consumer_key", this._consumerKey },
 				{ "oauth_nonce", GetRandomSessionNonce() },
-				{ "oauth_signature_method", "HMAC-SHA1" },
+				{ "oauth_signature_method", "HMAC-SHA256" },
 				{ "oauth_timestamp", GetUtcEpochTime().ToString() },
 				{ "oauth_version", "1.0" },
 			};
@@ -114,11 +112,10 @@ namespace NetSuiteAccess.Shared
 		}
 
 		/// <summary>
-		///	Returns signed request payload by using HMAC-SHA1
+		///	Returns signed request payload by using HMAC-SHA256
 		/// </summary>
-		/// <param name="url"></param>
+		/// <param name="baseUrl"></param>
 		/// <param name="urlMethod"></param>
-		/// <param name="tokenSecret"></param>
 		/// <param name="requestParameters"></param>
 		/// <returns></returns>
 		private string GetOAuthSignature( string baseUrl, string urlMethod, Dictionary< string, string > requestParameters )
@@ -132,11 +129,11 @@ namespace NetSuiteAccess.Shared
 			
 			string baseString = $"{ urlMethod.ToUpper() }&{ urlEncoded }&{ encodedParameters }";
 
-			HMACSHA1 hmacsha1 = new HMACSHA1( Encoding.ASCII.GetBytes( this._consumerSecret + "&" + ( string.IsNullOrEmpty( this._tokenSecret ) ? "" : this._tokenSecret) ) );
+			HMACSHA256 hmacsha256 = new HMACSHA256( Encoding.ASCII.GetBytes( this._consumerSecret + "&" + ( string.IsNullOrEmpty( this._tokenSecret ) ? "" : this._tokenSecret) ) );
 			byte[] data = Encoding.ASCII.GetBytes( baseString );
 
 			using (var stream = new MemoryStream( data ))
-				signature = Convert.ToBase64String( hmacsha1.ComputeHash( stream ) );
+				signature = Convert.ToBase64String( hmacsha256.ComputeHash( stream ) );
 
 			return signature;
 		}
@@ -153,7 +150,6 @@ namespace NetSuiteAccess.Shared
 		/// <summary>
 		///	Returns url with query parameters
 		/// </summary>
-		/// <param name="url"></param>
 		/// <param name="requestParameters"></param>
 		/// <returns></returns>
 		public string GetAuthorizationHeader( Dictionary< string, string > requestParameters )
