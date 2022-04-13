@@ -9,11 +9,10 @@
     <PackageLicenseUrl>https://github.com/skuvault/netsuiteAccess/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/skuvault/netsuiteAccess</PackageProjectUrl>
     <RepositoryUrl>https://github.com/skuvault/netsuiteAccess</RepositoryUrl>
-    <Version>1.7.7.0</Version>
+    <Version>1.7.8.0</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>1.7.7.0</AssemblyVersion>
-    <FileVersion>1.7.7.0</FileVersion>
-    <PackageVersion>1.7.7.0</PackageVersion>
+    <AssemblyVersion>1.7.8.0</AssemblyVersion>
+    <FileVersion>1.7.8.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
